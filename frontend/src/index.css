@@ -1,0 +1,37 @@
+@import "tailwindcss";
+@import "flowbite-react/plugin/tailwindcss";
+@source "../.flowbite-react/class-list.json";
+
+/* Class-based dark mode: Flowbite components render their dark styles once
+   the `.dark` class is present on <html> (set by the inline script in
+   index.html and toggled by <ThemeToggle />). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+
+  /* Moonlight palette */
+  --color-moon-dark: #020617;
+  --color-moon-mid: #0f172a;
+  --color-moon-accent: #38bdf8;
+  --color-moon-glow: #818cf8;
+}
+
+@layer base {
+  body {
+    @apply bg-white text-slate-700 antialiased dark:bg-moon-dark dark:text-slate-300;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  ::selection {
+    @apply bg-sky-500/30;
+  }
+}
+
+@layer utilities {
+  /* Frosted surface used for cards and dialogs — light card in light mode,
+     glassy dark in dark mode. */
+  .glass-moon {
+    @apply rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-white/[0.03] dark:shadow-2xl dark:backdrop-blur-xl;
+  }
+}

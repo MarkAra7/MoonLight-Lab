@@ -1,0 +1,10 @@
+# Local tooling (opencode / codegraph state) — not part of the project
+.codegraph/
+.omo/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
