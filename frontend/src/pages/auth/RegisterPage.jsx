@@ -72,7 +72,9 @@ export function RegisterPage() {
   const { roles, loading: rolesLoading } = useRoles();
 
   const [form, setForm] = useState({
-    name: "",
+    first_name: "",
+    last_name: "",
+    username: "",
     email: "",
     password: "",
     password_confirmation: "",
@@ -116,19 +118,53 @@ export function RegisterPage() {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <div>
-            <Label htmlFor="name" className="mb-2">
-              Full name
+            <Label htmlFor="first_name" className="mb-2">
+              First name
             </Label>
             <input
-              id="name"
-              name="name"
+              id="first_name"
+              name="first_name"
               type="text"
               required
-              autoComplete="name"
-              placeholder="John Doe"
+              autoComplete="given-name"
+              placeholder="John"
               className={inputClasses}
-              value={form.name}
-              onChange={set("name")}
+              value={form.first_name}
+              onChange={set("first_name")}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="last_name" className="mb-2">
+              Last name
+            </Label>
+            <input
+              id="last_name"
+              name="last_name"
+              type="text"
+              required
+              autoComplete="family-name"
+              placeholder="Doe"
+              className={inputClasses}
+              value={form.last_name}
+              onChange={set("last_name")}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="username" className="mb-2">
+              Username
+            </Label>
+            <input
+              id="username"
+              name="username"
+              type="text"
+              required
+              autoComplete="username"
+              placeholder="john_doe"
+              className={inputClasses}
+              value={form.username}
+              onChange={set("username")}
             />
           </div>
 
