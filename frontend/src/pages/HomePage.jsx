@@ -128,35 +128,32 @@ export function HomePage() {
         ))}
       </div>
 
-      <div className="mt-20 flex w-full justify-center">
-        <div className="glass-moon w-full max-w-xl p-8 text-center">
-          <div className="mb-4 flex items-center justify-center gap-2">
-            <Badge size="sm">Auth status</Badge>
-            {loading ? (
-              <Badge color="gray">Loading…</Badge>
-            ) : user ? (
-              <Badge color="success">Logged in</Badge>
-            ) : (
-              <Badge color="warning">Guest</Badge>
-            )}
-          </div>
-          <p className="mb-6 text-sm text-slate-600 dark:text-slate-400">
-            {loading
-              ? "Restoring session…"
-              : user
-                ? `Signed in as ${user.name ?? user.email ?? "user"}.`
-                : "You are browsing as a guest. Log in to access the full app."}
+
+{user && (
+        <div className="mt-12 flex flex-col items-center gap-4 text-center">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+            Welcome back, {user.name}!
+          </h2>
+          <p className="text-sm text-slate-600 dark:text-slate-400">
+            You are logged in as {user.email}.
           </p>
-          <div className="flex justify-center gap-3">
-            <Button href="/login" color="blue">
-              Log in
-            </Button>
-            <Button href="/register" color="light">
-              Register
-            </Button>
-          </div>
+          <Button
+            color="light"
+            onClick={() => {
+              localStorage.removeItem("authToken");
+              window.location.reload();
+            }}
+          >
+            Log Out
+          </Button>
         </div>
+      )}
+      <div>
+
       </div>
+
+
+
     </div>
   );
 }
