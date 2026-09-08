@@ -116,7 +116,7 @@ export function LoginPage() {
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
               placeholder="you@school.edu or your_username"
-              className={inputClasses}
+              className={`${inputClasses} pr-11`}
             />
           </div>
 
