@@ -34,4 +34,25 @@
   .glass-moon {
     @apply rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-white/[0.03] dark:shadow-2xl dark:backdrop-blur-xl;
   }
+
+  
+  .scrollbar-dark {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148, 163, 184, 0.5) transparent;
+  }
+  .scrollbar-dark::-webkit-scrollbar {
+    height: 8px;
+  }
+  .scrollbar-dark::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-dark::-webkit-scrollbar-thumb {
+    background-color: rgba(148, 163, 184, 0.5);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  .scrollbar-dark::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(148, 163, 184, 0.75);
+  }
 }
