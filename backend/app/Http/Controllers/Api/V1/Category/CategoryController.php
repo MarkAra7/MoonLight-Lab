@@ -11,7 +11,12 @@ class CategoryController extends Controller
 {
     public function index()
     {
-        return Category::with('media')->get();
+        return Category::with('media')
+            ->withCount(['quizzes' => function ($q) {
+                $q->where('is_public', true)
+                    ->whereHas('quizStatus', fn($qs) => $qs->where('status', 'published'));
+            }])
+            ->get();
     }
 
     public function store(StoreCategoryRequest $request)
