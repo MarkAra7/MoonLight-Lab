@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { getErrorMessage } from "@/api";
 import { quizApi } from "@/api/quiz";
 import { miscApi } from "@/api/misc";
+import { mediaUrl, truncate } from "@/utils/helpers";
 const features = [
   {
     id: "teachers",
@@ -317,25 +318,19 @@ export function HomePage() {
                 to={`/quizzes/${quiz.quiz_id}`}
                 className="group rounded-2xl border border-slate-200 bg-white p-6 transition-all duration-300 hover:border-sky-500/20 hover:shadow-lg dark:border-white/[0.06] dark:bg-white/[0.02] dark:hover:border-sky-500/20"
               >
-                {quiz.media?.file_path ? (
+                {mediaUrl(quiz.media?.file_path ?? quiz.media?.url) && (
                   <img
-                    src={`/storage/${quiz.media.file_path}`}
+                    src={mediaUrl(quiz.media?.file_path ?? quiz.media?.url)}
                     alt={quiz.title}
                     className="mb-4 h-40 w-full rounded-lg object-cover"
                   />
-                ) : quiz.media?.type === "link" && quiz.media.url ? (
-                  <img
-                    src={quiz.media.url}
-                    alt={quiz.title}
-                    className="mb-4 h-40 w-full rounded-lg object-cover"
-                  />
-                ) : null}
+                )}
                 <h3 className="mb-2 text-lg font-bold text-slate-900 group-hover:text-sky-600 dark:text-white dark:group-hover:text-sky-400">
                   {quiz.title}
                 </h3>
                 {quiz.description && (
                   <p className="mb-3 line-clamp-2 text-sm text-slate-600 dark:text-slate-400">
-                    {quiz.description}
+                    {truncate(quiz.description, 120)}
                   </p>
                 )}
                 <div className="flex flex-wrap items-center gap-2">
@@ -350,9 +345,9 @@ export function HomePage() {
                 </div>
                 {quiz.author && (
                   <div className="mt-4 flex items-center gap-2 border-t border-slate-100 pt-4 dark:border-white/[0.06]">
-                    {quiz.author.avatar ? (
+                    {quiz.author.avatar && mediaUrl(quiz.author.avatar.file_path ?? quiz.author.avatar.url) ? (
                       <img
-                        src={quiz.author.avatar}
+                        src={mediaUrl(quiz.author.avatar.file_path ?? quiz.author.avatar.url)}
                         alt={quiz.author.name}
                         className="h-6 w-6 rounded-full"
                       />
@@ -361,7 +356,7 @@ export function HomePage() {
                         {quiz.author.name?.charAt(0)}
                       </div>
                     )}
-                    <span className="text-sm text-slate-600 dark:text-slate-400">
+                    <span className="truncate text-sm text-slate-600 dark:text-slate-400">
                       {quiz.author.name}
                     </span>
                   </div>
