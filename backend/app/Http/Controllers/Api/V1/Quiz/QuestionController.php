@@ -10,11 +10,14 @@ use Illuminate\Support\Facades\Gate;
 
 class QuestionController extends Controller
 {
-    public function index(Quiz $quiz)
+    public function index(Quiz $quiz, Request $request)
     {
         Gate::authorize('view', $quiz);
 
-        return $quiz->questions()->with('answers')->orderBy('display_order')->get();
+        return $quiz->questions()->with('answers')
+            ->visibleTo($request->user())
+            ->orderBy('display_order')
+            ->get();
     }
 
     public function store(Request $request, Quiz $quiz)
@@ -27,6 +30,7 @@ class QuestionController extends Controller
             'media_id' => 'nullable|string|exists:media,file_id',
             'display_order' => 'nullable|integer|min:0',
             'config' => 'nullable|json',
+            'is_private' => 'boolean',
         ]);
 
         $maxOrder = $quiz->questions()->max('display_order') ?? 0;
@@ -55,6 +59,7 @@ class QuestionController extends Controller
             'media_id' => 'nullable|string|exists:media,file_id',
             'display_order' => 'nullable|integer|min:0',
             'config' => 'nullable|json',
+            'is_private' => 'boolean',
         ]);
 
         $question->update($validated);

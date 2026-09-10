@@ -39,11 +39,16 @@ class QuizController extends Controller
         return response()->json($quiz->load(['category', 'media', 'author']), 201);
     }
 
-    public function show(Quiz $quiz)
+    public function show(Quiz $quiz, Request $request)
     {
         Gate::authorize('view', $quiz);
 
-        return $quiz->load(['category', 'media', 'author', 'questions.answers']);
+        $quiz->load(['category', 'media', 'author']);
+        $quiz->load(['questions' => function ($q) use ($request) {
+            $q->visibleTo($request->user())->with('answers')->orderBy('display_order');
+        }]);
+
+        return $quiz;
     }
 
     public function myQuizzes(Request $request)

@@ -24,6 +24,7 @@ class Question extends Model
         'media_id',
         'display_order',
         'config',
+        'is_private',
     ];
 
     protected $casts = [
@@ -60,5 +61,13 @@ class Question extends Model
     public function answers()
     {
         return $this->hasMany(Answer::class, 'question_id', 'question_id');
+    }
+
+    public function scopeVisibleTo($query, ?\App\Models\User $user)
+    {
+        return $query->where(function ($q) use ($user) {
+            $q->where('is_private', false)
+              ->orWhere(fn($q2) => $user && $q2->whereHas('quiz', fn($q3) => $q3->where('author_id', $user->id)));
+        });
     }
 }
