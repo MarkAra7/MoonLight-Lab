@@ -1,0 +1,24 @@
+.git
+.gitignore
+.editorconfig
+Dockerfile
+.env
+.env.*
+!.env.example
+vendor
+node_modules
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/testing/*
+storage/framework/views/*
+database/*.sqlite
+database/*.sqlite-journal
+.phpunit.result.cache
+
+# Keep ONLY the Docker runtime config (nginx/supervisor/entrypoint) in the
+# build context - the Dockerfile COPYs these at build time.
+docker/*
+!docker/nginx.conf
+!docker/supervisord.conf
+!docker/entrypoint.sh
