@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { Label, Button, Spinner, Alert } from "flowbite-react";
 import { useAuth } from "@/context/AuthContext";
@@ -52,7 +52,13 @@ function EyeOffIcon() {
   );
 }
 
-function PasswordToggle({ show, onToggle, label }) {
+interface PasswordToggleProps {
+  show: boolean;
+  onToggle: () => void;
+  label: string;
+}
+
+function PasswordToggle({ show, onToggle, label }: PasswordToggleProps) {
   return (
     <button
       type="button"
@@ -75,7 +81,7 @@ export function LoginPage() {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError("");
     setSubmitting(true);

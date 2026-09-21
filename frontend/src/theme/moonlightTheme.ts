@@ -1,7 +1,6 @@
 import { createTheme } from "flowbite-react";
 
-
- // https://flowbite-react.com/docs/customize/theme
+// https://flowbite-react.com/docs/customize/theme
 
 export const moonlightTheme = createTheme({
   dropdown: {

@@ -1,25 +1,26 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { Badge, Button, Spinner } from "flowbite-react";
 import { quizApi } from "@/api/quiz";
 import { getErrorMessage } from "@/api";
 import { useAuth } from "@/context/AuthContext";
 import { mediaUrl, truncate, formatDate } from "@/utils/helpers";
+import type { Comment, Quiz } from "@/api/types";
 
 const ShowQ = () => {
 	const { quizId } = useParams();
 	const navigate = useNavigate();
 	const { user } = useAuth();
-	const [quiz, setQuiz] = useState(null);
+	const [quiz, setQuiz] = useState<Quiz | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState("");
 
 	const [ratings, setRatings] = useState({ average: 0, count: 0 });
-	const [userRating, setUserRating] = useState(null);
+	const [userRating, setUserRating] = useState<number | null>(null);
 	const [hoverRating, setHoverRating] = useState(0);
 	const [ratingBusy, setRatingBusy] = useState(false);
 
-	const [comments, setComments] = useState([]);
+	const [comments, setComments] = useState<Comment[]>([]);
 	const [commentBody, setCommentBody] = useState("");
 	const [posting, setPosting] = useState(false);
 
@@ -53,13 +54,13 @@ const ShowQ = () => {
 		fetchAll();
 	}, [quizId]);
 
-	const handleRate = async (rating) => {
+	const handleRate = async (rating: number) => {
 		if (ratingBusy) return;
 		setRatingBusy(true);
 		try {
-			await quizApi.rate(quizId, { rating });
+			await quizApi.rate(quizId!, { rating });
 			setUserRating(rating);
-			const res = await quizApi.ratings(quizId);
+			const res = await quizApi.ratings(quizId!);
 			setRatings({ average: res.data.average, count: res.data.count });
 		} catch (err) {
 			console.error("Failed to rate quiz:", err);
@@ -68,13 +69,13 @@ const ShowQ = () => {
 		}
 	};
 
-	const postComment = async (e) => {
+	const postComment = async (e: FormEvent) => {
 		e.preventDefault();
 		const body = commentBody.trim();
 		if (!body || posting) return;
 		setPosting(true);
 		try {
-			const res = await quizApi.comment(quizId, { body });
+			const res = await quizApi.comment(quizId!, { body });
 			setComments((prev) => [res.data, ...prev]);
 			setCommentBody("");
 		} catch (err) {
@@ -84,7 +85,7 @@ const ShowQ = () => {
 		}
 	};
 
-	const deleteComment = async (commentId) => {
+	const deleteComment = async (commentId: number) => {
 		try {
 			await quizApi.removeComment(commentId);
 			setComments((prev) => prev.filter((c) => c.id !== commentId));
@@ -150,7 +151,7 @@ const ShowQ = () => {
 								{quiz.author.avatar && mediaUrl(quiz.author.avatar.file_path ?? quiz.author.avatar.url) ? (
 									<img
 										src={mediaUrl(quiz.author.avatar.file_path ?? quiz.author.avatar.url)}
-										alt={quiz.author.name}
+										alt={quiz.author.name ?? undefined}
 										className="h-6 w-6 rounded-full"
 									/>
 								) : (
@@ -162,8 +163,8 @@ const ShowQ = () => {
 							</span>
 						)}
 						<span>{questionsCount} questions</span>
-						{quiz.time_limit > 0 && <span>{quiz.time_limit} min</span>}
-						{quiz.views > 0 && <span>{quiz.views} views</span>}
+						{(quiz.time_limit ?? 0) > 0 && <span>{quiz.time_limit} min</span>}
+						{(quiz.views ?? 0) > 0 && <span>{quiz.views} views</span>}
 						{ratings.count > 0 && (
 							<span>{ratings.average} ★ ({ratings.count})</span>
 						)}

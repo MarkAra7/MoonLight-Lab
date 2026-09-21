@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 
 const THEME_KEY = "theme";
-const SAVED = { light: "light", dark: "dark" };
+const SAVED = { light: "light", dark: "dark" } as const;
 
-function savedMode() {
+type ThemeMode = "light" | "dark" | "auto";
+
+function savedMode(): ThemeMode {
   try {
     const mode = localStorage.getItem(THEME_KEY);
     return mode === SAVED.dark || mode === SAVED.light ? mode : "auto";
@@ -12,7 +14,7 @@ function savedMode() {
   }
 }
 
-function isDark(mode) {
+function isDark(mode: ThemeMode): boolean {
   return (
     mode === SAVED.dark ||
     (mode === "auto" &&
@@ -62,8 +64,12 @@ function MoonIcon() {
   );
 }
 
-export function ThemeToggle({ className = "" }) {
-  const [dark, setDark] = useState(() => isDark(savedMode()));
+export interface ThemeToggleProps {
+  className?: string;
+}
+
+export function ThemeToggle({ className = "" }: ThemeToggleProps) {
+  const [dark, setDark] = useState<boolean>(() => isDark(savedMode()));
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
@@ -76,7 +82,7 @@ export function ThemeToggle({ className = "" }) {
   }, []);
 
   useEffect(() => {
-    const onStorage = (e) => {
+    const onStorage = (e: StorageEvent) => {
       if (e.key === THEME_KEY) setDark(isDark(savedMode()));
     };
     window.addEventListener("storage", onStorage);

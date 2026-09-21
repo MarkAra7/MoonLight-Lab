@@ -1,21 +1,28 @@
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
-import { authApi } from "@/api";
-import { tokenStore } from "@/api";
+import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
+import { authApi, tokenStore } from "@/api";
+import type { AuthResponse, LoginPayload, RegisterPayload } from "@/api";
+import type { User } from "@/api/types";
 
-const AuthContext = createContext(null);
-
-
-async function fetchCurrentUser() {
-  const { data } = await authApi.me();
-  return data.data ?? data;
+export interface AuthContextValue {
+  user: User | null;
+  loading: boolean;
+  login: (payload: LoginPayload) => Promise<AuthResponse>;
+  register: (payload: RegisterPayload) => Promise<AuthResponse>;
+  logout: () => Promise<void>;
+  refresh: () => Promise<void>;
 }
 
+const AuthContext = createContext<AuthContextValue | null>(null);
 
-export function AuthProvider({ children }) {
+async function fetchCurrentUser(): Promise<User> {
+  const { data } = await authApi.me();
+  // `/user` is a UserResource (wrapped in `{ data: ... }`); tolerate an unwrapped user too.
+  return "data" in data ? data.data : data;
+}
 
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(() => Boolean(tokenStore.get()));
-
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState<boolean>(() => Boolean(tokenStore.get()));
 
   useEffect(() => {
     if (!tokenStore.get()) {
@@ -55,7 +62,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = useCallback(
-    async (payload) => {
+    async (payload: LoginPayload) => {
       const { data } = await authApi.login(payload);
       const token = data.access_token ?? data.token ?? data.data?.token;
       if (!token) {
@@ -68,7 +75,7 @@ export function AuthProvider({ children }) {
     [refresh]
   );
 
-  const register = useCallback(async (payload) => {
+  const register = useCallback(async (payload: RegisterPayload) => {
     const { data } = await authApi.register(payload);
     return data;
   }, []);
@@ -77,20 +84,20 @@ export function AuthProvider({ children }) {
     try {
       await authApi.logout();
     } catch {
-      
+      // ignore — the token is cleared below regardless
     } finally {
       tokenStore.clear();
       setUser(null);
     }
   }, []);
 
-  const value = { user, loading, login, register, logout, refresh };
+  const value: AuthContextValue = { user, loading, login, register, logout, refresh };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
-export function useAuth() {
+export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext);
   if (!ctx) {
     throw new Error("useAuth must be used within an AuthProvider");

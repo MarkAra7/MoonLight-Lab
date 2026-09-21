@@ -6,6 +6,8 @@ import { getErrorMessage } from "@/api";
 import { quizApi } from "@/api/quiz";
 import { miscApi } from "@/api/misc";
 import { mediaUrl, truncate } from "@/utils/helpers";
+import type { Category, Quiz } from "@/api/types";
+
 const features = [
   {
     id: "teachers",
@@ -43,12 +45,12 @@ const features = [
 ];
 
 export function HomePage() {
-  const { user, loading } = useAuth();
-  const [quizzes, setQuizzes] = useState([]);
+  useAuth();
+  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [quizzesLoading, setQuizzesLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [categories, setCategories] = useState([]);
-  const categoryScrollerRef = useRef(null);
+  const [error, setError] = useState<string | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const categoryScrollerRef = useRef<HTMLDivElement | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
 
@@ -61,7 +63,7 @@ export function HomePage() {
   }, []);
 
   const scrollCategories = useCallback(
-    (direction) => {
+    (direction: "left" | "right") => {
       const el = categoryScrollerRef.current;
       if (!el) return;
       const amount = direction === "left" ? -280 : 280;
@@ -348,7 +350,7 @@ export function HomePage() {
                     {quiz.author.avatar && mediaUrl(quiz.author.avatar.file_path ?? quiz.author.avatar.url) ? (
                       <img
                         src={mediaUrl(quiz.author.avatar.file_path ?? quiz.author.avatar.url)}
-                        alt={quiz.author.name}
+                        alt={quiz.author.name ?? undefined}
                         className="h-6 w-6 rounded-full"
                       />
                     ) : (

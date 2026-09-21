@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ChangeEvent, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { Alert, Button, Label, Spinner } from "flowbite-react";
 import { useAuth } from "@/context/AuthContext";
@@ -53,7 +53,13 @@ function EyeOffIcon() {
   );
 }
 
-function PasswordToggle({ show, onToggle, label }) {
+interface PasswordToggleProps {
+  show: boolean;
+  onToggle: () => void;
+  label: string;
+}
+
+function PasswordToggle({ show, onToggle, label }: PasswordToggleProps) {
   return (
     <button
       type="button"
@@ -66,12 +72,22 @@ function PasswordToggle({ show, onToggle, label }) {
   );
 }
 
+interface RegisterForm {
+  first_name: string;
+  last_name: string;
+  username: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
+  role: string;
+}
+
 export function RegisterPage() {
   const { register } = useAuth();
   const navigate = useNavigate();
   const { roles, loading: rolesLoading } = useRoles();
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<RegisterForm>({
     first_name: "",
     last_name: "",
     username: "",
@@ -87,9 +103,10 @@ export function RegisterPage() {
 
   const effectiveRole = form.role || roles[0]?.title || "";
 
-  const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
+  const set = (key: keyof RegisterForm) => (e: ChangeEvent<HTMLInputElement>) =>
+    setForm((f) => ({ ...f, [key]: e.target.value }));
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError("");
     setSubmitting(true);
