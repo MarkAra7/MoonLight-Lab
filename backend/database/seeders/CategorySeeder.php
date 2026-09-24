@@ -12,8 +12,6 @@ class CategorySeeder extends Seeder
 {
     public function run(): void
     {
-        $sourceDir = 'C:\\Users\\marku\\Pictures\\CAT';
-
         $categories = [
             ['name' => 'Programming', 'description' => 'Test your coding knowledge across multiple languages', 'image' => 'Programming.jpg'],
             ['name' => 'Science', 'description' => 'Biology, chemistry, physics and more', 'image' => 'Science.jpg'],
@@ -29,31 +27,19 @@ class CategorySeeder extends Seeder
             ['name' => 'Literature', 'description' => 'Books, authors and literary analysis', 'image' => 'Literature.webp'],
         ];
 
-        $existingMediaPaths = Media::where('type', 'file')->pluck('file_path');
-
         foreach ($categories as $data) {
-            $sourcePath = $sourceDir.'\\'.$data['image'];
+            $ext = strtolower(pathinfo($data['image'], PATHINFO_EXTENSION));
+            $storedPath = 'images/system/'.Str::slug($data['name']).'.'.$ext;
             $mediaId = null;
 
-            if (is_file($sourcePath)) {
-                $ext = strtolower(pathinfo($sourcePath, PATHINFO_EXTENSION));
-                $storedPath = 'images/system/'.Str::slug($data['name']).'.'.$ext;
-
-                if (! $existingMediaPaths->contains($storedPath)) {
-                    Storage::disk('public')->putFileAs(
-                        'images/system',
-                        $sourcePath,
-                        Str::slug($data['name']).'.'.$ext
-                    );
-                }
-
+            if (Storage::disk('public')->exists($storedPath)) {
                 $media = Media::firstOrCreate(
                     ['file_path' => $storedPath],
                     [
                         'type' => 'file',
                         'file_name' => $data['image'],
-                        'mime_type' => mime_content_type($sourcePath),
-                        'file_size' => filesize($sourcePath),
+                        'mime_type' => Storage::disk('public')->mimeType($storedPath),
+                        'file_size' => Storage::disk('public')->size($storedPath),
                     ]
                 );
 
