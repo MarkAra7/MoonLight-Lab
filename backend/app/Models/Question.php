@@ -31,8 +31,6 @@ class Question extends Model
         'config' => 'array',
     ];
 
-    protected $appends = ['correct_text', 'match_mode'];
-
     public function getCorrectTextAttribute(): ?string
     {
         return $this->config['correct_text'] ?? null;
