@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1\Quiz;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\AnswerResource;
 use App\Models\Answer;
 use App\Models\Question;
 use Illuminate\Http\Request;
@@ -10,11 +11,14 @@ use Illuminate\Support\Facades\Gate;
 
 class AnswerController extends Controller
 {
-    public function index(Question $question)
+    public function index(Question $question, Request $request)
     {
         Gate::authorize('view', $question->quiz);
 
-        return $question->answers()->orderBy('display_order')->get();
+        $isAuthor = $request->user()?->id === $question->quiz->author_id;
+
+        return $question->answers()->orderBy('display_order')->get()
+            ->map(fn (Answer $answer) => (new AnswerResource($answer))->setAuthor((bool) $isAuthor));
     }
 
     public function store(Request $request, Question $question)
@@ -35,14 +39,16 @@ class AnswerController extends Controller
 
         $answer = Answer::create($validated);
 
-        return response()->json($answer, 201);
+        return response()->json((new AnswerResource($answer))->setAuthor(true), 201);
     }
 
-    public function show(Answer $answer)
+    public function show(Answer $answer, Request $request)
     {
         Gate::authorize('view', $answer->question->quiz);
 
-        return $answer;
+        $isAuthor = $request->user()?->id === $answer->question->quiz->author_id;
+
+        return (new AnswerResource($answer))->setAuthor((bool) $isAuthor);
     }
 
     public function update(Request $request, Answer $answer)
@@ -59,7 +65,7 @@ class AnswerController extends Controller
 
         $answer->update($validated);
 
-        return $answer;
+        return (new AnswerResource($answer))->setAuthor(true);
     }
 
     public function destroy(Answer $answer)

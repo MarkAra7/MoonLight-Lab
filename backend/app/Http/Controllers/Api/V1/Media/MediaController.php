@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1\Media;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\MediaResource;
 use App\Models\Media;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -17,7 +18,7 @@ class MediaController extends Controller
     {
         Gate::authorize('view', $media);
 
-        return response()->json($media);
+        return response()->json(new MediaResource($media));
     }
 
     public function store(Request $request)
@@ -58,7 +59,7 @@ class MediaController extends Controller
 
             Log::info('Media file uploaded', ['file_id' => $media->file_id, 'user_id' => auth()->id(), 'folder' => $folder, 'file_name' => $media->file_name, 'mime_type' => $media->mime_type, 'file_size' => $media->file_size]);
 
-            return response()->json($media, 201);
+            return response()->json(new MediaResource($media), 201);
         }
 
         if ($request->filled('url')) {
@@ -72,7 +73,7 @@ class MediaController extends Controller
 
             Log::info('Media URL saved', ['file_id' => $media->file_id, 'user_id' => auth()->id(), 'url' => $media->url, 'provider' => $media->provider]);
 
-            return response()->json($media, 201);
+            return response()->json(new MediaResource($media), 201);
         }
 
         return response()->json(['message' => 'Provide a file or a URL.'], 422);
