@@ -43,30 +43,29 @@ export function AppLayout() {
                 inline
                 arrowIcon={false}
                 placement="bottom-end"
-                // The original JSX passed a custom <button> as the Dropdown `trigger`
-                // prop. flowbite-react v0.12 types `trigger` as "click" | "hover", so
-                // the element is cast to preserve the original runtime behavior exactly.
-                trigger={
-                  (
-                    <button type="button" className="flex items-center gap-2 rounded-full focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 dark:focus:ring-offset-[#020617]">
-                      {user.avatar?.file_path || user.avatar?.url ? (
-                        <Avatar
-                          img={mediaUrl(user.avatar.file_path ?? user.avatar.url)}
-                          rounded
-                          size="sm"
-                          className="h-8 w-8"
-                        />
-                      ) : (
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sky-100 text-xs font-bold text-sky-600 dark:bg-sky-900/40 dark:text-sky-400">
-                          {user.name?.charAt(0)?.toUpperCase() || user.username?.charAt(0)?.toUpperCase() || "?"}
-                        </div>
-                      )}
-                      <svg className="h-4 w-4 text-slate-500 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                      </svg>
-                    </button>
-                  ) as unknown as "click"
-                }
+                renderTrigger={() => (
+                  <button
+                    type="button"
+                    aria-label="Open account menu"
+                    className="flex items-center gap-2 rounded-full focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 dark:focus:ring-offset-[#020617]"
+                  >
+                    {user.avatar?.file_path || user.avatar?.url ? (
+                      <Avatar
+                        img={mediaUrl(user.avatar.file_path ?? user.avatar.url)}
+                        rounded
+                        size="sm"
+                        className="h-8 w-8"
+                      />
+                    ) : (
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sky-100 text-xs font-bold text-sky-600 dark:bg-sky-900/40 dark:text-sky-400">
+                        {user.name?.charAt(0)?.toUpperCase() || user.username?.charAt(0)?.toUpperCase() || "?"}
+                      </div>
+                    )}
+                    <svg className="h-4 w-4 text-slate-500 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                    </svg>
+                  </button>
+                )}
               >
                 <DropdownHeader>
                   <span className="block text-sm font-semibold text-slate-900 dark:text-white">{user.name || user.username}</span>
