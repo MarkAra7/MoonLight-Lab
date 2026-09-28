@@ -20,6 +20,11 @@ export function AppLayout() {
     navigate("/");
   };
 
+  const avatarInitial =
+    user?.first_name?.trim().charAt(0).toUpperCase() ||
+    user?.username?.trim().charAt(0).toUpperCase() ||
+    "?";
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-white text-slate-700 dark:bg-moon-dark dark:text-slate-300">
       <header className="sticky top-0 z-20 w-full border-b border-slate-200 bg-white/80 backdrop-blur-md dark:border-white/5 dark:bg-[#020617]/80">
@@ -58,7 +63,7 @@ export function AppLayout() {
                       />
                     ) : (
                       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sky-100 text-xs font-bold text-sky-600 dark:bg-sky-900/40 dark:text-sky-400">
-                        {user.name?.charAt(0)?.toUpperCase() || user.username?.charAt(0)?.toUpperCase() || "?"}
+                        {avatarInitial}
                       </div>
                     )}
                     <svg className="h-4 w-4 text-slate-500 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
