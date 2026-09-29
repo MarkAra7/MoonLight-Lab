@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\V1\Student\QuizAttemptController;
 use App\Http\Controllers\Api\V1\Student\StudentClassController;
 use App\Http\Controllers\Api\V1\Teacher\AssignmentController;
 use App\Http\Controllers\Api\V1\Teacher\ClassController;
+use App\Http\Controllers\Api\V1\User\EmailChangeController;
 use App\Http\Controllers\Api\V1\User\RoleController;
 use App\Http\Controllers\Api\V1\User\UserController;
 use Illuminate\Support\Facades\Route;
@@ -38,6 +39,13 @@ Route::prefix('v1')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::post('/verify-email', [AuthController::class, 'verify']);
         Route::post('/verify-email/resend', [AuthController::class, 'resendVerification'])->middleware('throttle:3,60');
+
+        Route::get('/email-change', [EmailChangeController::class, 'show']);
+        Route::post('/email-change', [EmailChangeController::class, 'store'])->middleware('throttle:5,60');
+        Route::post('/email-change/verify/new-email', [EmailChangeController::class, 'verifyNewEmail'])->middleware('throttle:10,60');
+        Route::post('/email-change/verify/current-email', [EmailChangeController::class, 'verifyCurrentEmail'])->middleware('throttle:10,60');
+        Route::post('/email-change/cancel', [EmailChangeController::class, 'cancel']);
+
         Route::apiResource('users', UserController::class);
 
         Route::get('/media/{media}', [MediaController::class, 'show']);
