@@ -26,6 +26,24 @@
   ::selection {
     @apply bg-sky-500/30;
   }
+
+  /* Native <select> dropdown panels are rendered by the OS, not Tailwind, so
+     a single text/bg utility leaves the open option list unreadable (e.g.
+     the select's dark:text-white on a system-default light panel). Pin
+     explicit option colors and color-scheme so the panel matches each theme
+     and the closed select's native arrow stays visible in dark mode. */
+  select {
+    color-scheme: light;
+  }
+  select option {
+    @apply bg-white text-slate-900;
+  }
+  .dark select {
+    color-scheme: dark;
+  }
+  .dark select option {
+    @apply bg-moon-mid text-slate-200;
+  }
 }
 
 @layer utilities {
