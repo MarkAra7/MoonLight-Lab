@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Label, Button, Spinner, Alert } from "flowbite-react";
 import { useAuth } from "@/context/AuthContext";
 import { getErrorMessage } from "@/api";
@@ -74,6 +74,10 @@ function PasswordToggle({ show, onToggle, label }: PasswordToggleProps) {
 export function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  const rawRedirect = searchParams.get("redirect");
+  const redirect = rawRedirect && rawRedirect.startsWith("/") && !rawRedirect.startsWith("//") ? rawRedirect : "/";
 
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
@@ -87,7 +91,7 @@ export function LoginPage() {
     setSubmitting(true);
     try {
       await login({ login: identifier, password, device_name: "web" });
-      navigate("/");
+      navigate(redirect, { replace: true });
     } catch (err) {
       setError(getErrorMessage(err, "Login failed."));
     } finally {

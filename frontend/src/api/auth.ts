@@ -33,7 +33,6 @@ export const authApi = {
   register: (payload: RegisterPayload) => apiClient.post<AuthResponse>("/register", payload),
   login: (payload: LoginPayload) => apiClient.post<AuthResponse>("/login", payload),
   logout: () => apiClient.post("/logout"),
-  // UserResource wraps the payload in `{ data: ... }`; AuthContext also tolerates an unwrapped user.
   me: () => apiClient.get<User | { data: User }>("/user"),
   verifyEmail: (payload: { token: string }) => apiClient.post("/verify-email", payload),
   resendVerification: () => apiClient.post("/verify-email/resend"),
