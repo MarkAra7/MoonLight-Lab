@@ -11,3 +11,6 @@ Thumbs.db
 
 # Docker secrets (contains real credentials)
 .env.docker
+
+# Local test artifacts
+.playwright-mcp/
