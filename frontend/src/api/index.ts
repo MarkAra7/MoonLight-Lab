@@ -5,4 +5,5 @@ export * from "./quiz";
 export * from "./class";
 export * from "./party";
 export * from "./misc";
+export * from "./media";
 export type * from "./types";

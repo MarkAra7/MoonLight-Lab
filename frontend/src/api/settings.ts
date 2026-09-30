@@ -9,6 +9,8 @@ export interface ProfilePayload {
   country?: string;
   preferred_language?: string;
   is_private?: boolean;
+  /** Media file_id to attach as the avatar, or null to detach the current one. */
+  avatar_id?: string | null;
 }
 
 /** Payload for EmailChangeController::store (`POST /email-change`). */
