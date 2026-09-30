@@ -5,7 +5,8 @@ import { useAuth } from "@/context/AuthContext";
 import { authApi, getErrorMessage, settingsApi } from "@/api";
 import type { EmailChangeState } from "@/api/settings";
 import type { User } from "@/api/types";
-import { formatDate, mediaUrl } from "@/utils/helpers";
+import { formatDate } from "@/utils/helpers";
+import { AvatarUploader } from "@/components/AvatarUploader";
 import {
   COUNTRY_OPTIONS,
   isKnownCountry,
@@ -148,21 +149,9 @@ function ProfileSection({ user, onSaved }: { user: User; onSaved: () => void }) 
     }
   };
 
-  const avatarSrc = mediaUrl(user.avatar?.file_path ?? user.avatar?.url);
-
   return (
     <SectionCard title="Profile" description="Your personal details, shown on your public profile.">
-      {avatarSrc && (
-        <div className="mb-6 flex items-center gap-4">
-          <img src={avatarSrc} alt="Your avatar" className="h-16 w-16 rounded-full object-cover" />
-          <div>
-            <p className="text-sm font-semibold text-slate-900 dark:text-white">
-              {user.name || user.username}
-            </p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Avatar</p>
-          </div>
-        </div>
-      )}
+      <AvatarUploader user={user} onChanged={onSaved} />
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
