@@ -31,5 +31,10 @@ done
 # is safe to run on every boot (no duplicate rows).
 php artisan db:seed --force --no-interaction
 
+# Re-apply ownership AFTER the artisan commands above, since they run as root
+# and may (re)create storage/logs/laravel.log with root ownership. php-fpm
+# workers run as www-data and must be able to append to the log file.
+chown -R www-data:www-data storage bootstrap/cache
+
 echo "==> Backend ready. Starting php-fpm + nginx..."
 exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
