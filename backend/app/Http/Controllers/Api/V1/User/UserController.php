@@ -62,4 +62,28 @@ class UserController extends Controller
 
         return UserResource::make($user)->withProfile(true, $request->user());
     }
+
+    public function search(Request $request)
+    {
+        $term = trim((string) $request->input('q'));
+
+        $users = User::query()
+            ->where('is_private', false)
+            ->with(['role', 'avatar'])
+            ->when($request->filled('q'), fn($query) => $query->where(fn($w) => $w
+                ->where('username', 'like', '%'.$term.'%')
+                ->orWhere('name', 'like', '%'.$term.'%')), fn($query) => $query->whereRaw('1 = 0'))
+            ->latest()
+            ->paginate($this->perPage($request));
+
+        $resource = UserResource::collection($users);
+        $resource->each(fn (UserResource $user) => $user->withProfile(true, null));
+
+        return $resource;
+    }
+
+    private function perPage(Request $request): int
+    {
+        return min(max((int) $request->input('per_page', 12), 1), 50);
+    }
 }
