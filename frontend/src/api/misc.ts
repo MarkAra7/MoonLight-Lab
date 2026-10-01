@@ -52,7 +52,6 @@ export const miscApi = {
 
   users: () => apiClient.get("/users"),
   user: (id: number | string) => apiClient.get(`/users/${id}`),
-  publicProfile: (username: string) => apiClient.get(`/users/profile/${username}`),
 
   uploadMedia: (formData: FormData) =>
     apiClient.post("/media", formData, {
