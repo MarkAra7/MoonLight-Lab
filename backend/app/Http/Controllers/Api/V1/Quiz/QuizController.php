@@ -22,8 +22,12 @@ class QuizController extends Controller
             ->when($request->filled('author'), function ($query) use ($request) {
                 $query->whereHas('author', fn($q) => $q->where('username', $request->input('author')));
             })
+            ->when($request->filled('category'), fn($query) => $query->where('category_id', $request->input('category')))
+            ->when($request->filled('search'), fn($query) => $query->where(fn($w) => $w
+                ->where('title', 'like', '%'.$request->input('search').'%')
+                ->orWhere('description', 'like', '%'.$request->input('search').'%')))
             ->latest()
-            ->get());
+            ->paginate($this->perPage($request)));
     }
 
     public function store(StoreQuizRequest $request)
@@ -61,7 +65,7 @@ class QuizController extends Controller
             ->withCount('questions')
             ->where('author_id', $request->user()->id)
             ->latest()
-            ->get());
+            ->paginate($this->perPage($request)));
     }
 
     public function update(UpdateQuizRequest $request, Quiz $quiz)
@@ -80,5 +84,10 @@ class QuizController extends Controller
         $quiz->delete();
 
         return response()->noContent();
+    }
+
+    private function perPage(Request $request): int
+    {
+        return min(max((int) $request->input('per_page', 12), 1), 50);
     }
 }
