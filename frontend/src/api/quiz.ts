@@ -1,10 +1,16 @@
 import apiClient from "./client";
-import type { Comment, MyRating, Quiz, RatingSummary } from "./types";
+import type { Comment, MyRating, Paged, Quiz, RatingSummary } from "./types";
 
+/** Query filters accepted by `GET /quizzes` (all optional, all filter-combined). */
 export interface QuizListParams {
-  category?: number | string;
+  /** Author username. */
+  author?: string;
+  /** Category id. */
+  category?: string | number;
+  /** Free text matched against title / description. */
   search?: string;
-  [key: string]: unknown;
+  page?: number;
+  per_page?: number;
 }
 
 export interface QuizPayload {
@@ -85,13 +91,13 @@ export interface QuizStats {
 }
 
 export const quizApi = {
-  list: (params?: QuizListParams) => apiClient.get<Quiz[]>("/quizzes", { params }),
+  list: (params?: QuizListParams) => apiClient.get<Paged<Quiz>>("/quizzes", { params }),
   show: (id: number | string) => apiClient.get<Quiz>(`/quizzes/${id}`),
   stats: (id: number | string) => apiClient.get<QuizStats>(`/quizzes/${id}/stats`),
   ratings: (id: number | string) => apiClient.get<RatingSummary>(`/quizzes/${id}/ratings`),
   comments: (id: number | string) => apiClient.get<Comment[]>(`/quizzes/${id}/comments`),
 
-  myQuizzes: () => apiClient.get<Quiz[]>("/my-quizzes"),
+  myQuizzes: (page?: number) => apiClient.get<Paged<Quiz>>("/my-quizzes", { params: { page } }),
   create: (payload: QuizPayload) => apiClient.post<Quiz>("/quizzes", payload),
   update: (id: number | string, payload: Partial<QuizPayload>) => apiClient.put<Quiz>(`/quizzes/${id}`, payload),
   remove: (id: number | string) => apiClient.delete(`/quizzes/${id}`),

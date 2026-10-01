@@ -4,6 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { getErrorMessage } from "@/api";
 import { quizApi } from "@/api/quiz";
 import { miscApi } from "@/api/misc";
+import { Pagination } from "@/components/Pagination";
 import { QuizCard } from "@/components/QuizCard";
 import type { Category, Quiz } from "@/api/types";
 
@@ -46,6 +47,8 @@ const features = [
 export function HomePage() {
   useAuth();
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [quizPage, setQuizPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
   const [quizzesLoading, setQuizzesLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -72,19 +75,30 @@ export function HomePage() {
   );
 
   useEffect(() => {
-    const fetchQuizzes = async () => {
+    let active = true;
+
+    (async () => {
       try {
         setQuizzesLoading(true);
-        const response = await quizApi.list();
-        setQuizzes(response.data);
+        const { data } = await quizApi.list({ page: quizPage });
+        if (!active) return;
+        setQuizzes(data.data);
+        setLastPage(data.meta.last_page);
       } catch (err) {
+        if (!active) return;
         setError(getErrorMessage(err));
         console.error("Failed to fetch quizzes:", err);
       } finally {
-        setQuizzesLoading(false);
+        if (active) setQuizzesLoading(false);
       }
-    };
+    })();
 
+    return () => {
+      active = false;
+    };
+  }, [quizPage]);
+
+  useEffect(() => {
     const fetchCategories = async () => {
       try {
         const response = await miscApi.categories();
@@ -94,7 +108,6 @@ export function HomePage() {
       }
     };
 
-    fetchQuizzes();
     fetchCategories();
   }, []);
 
@@ -312,10 +325,17 @@ export function HomePage() {
             No quizzes available yet.
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {quizzes.map((quiz) => (
-              <QuizCard key={quiz.quiz_id} quiz={quiz} showAuthorLink />
-            ))}
+          <div className="flex flex-col gap-8">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {quizzes.map((quiz) => (
+                <QuizCard key={quiz.quiz_id} quiz={quiz} showAuthorLink />
+              ))}
+            </div>
+            <Pagination
+              currentPage={quizPage}
+              lastPage={lastPage}
+              onPageChange={setQuizPage}
+            />
           </div>
         )}
       </div>

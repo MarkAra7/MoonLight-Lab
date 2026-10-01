@@ -6,6 +6,7 @@ import { getErrorMessage } from "@/api";
 import { quizApi } from "@/api/quiz";
 import { usersApi } from "@/api/users";
 import { useAuth } from "@/context/AuthContext";
+import { Pagination } from "@/components/Pagination";
 import { QuizCard } from "@/components/QuizCard";
 import { formatDate, mediaUrl } from "@/utils/helpers";
 import type { Quiz, User } from "@/api/types";
@@ -99,6 +100,9 @@ export function UserProfilePage() {
 
   const [view, setView] = useState<ViewState>({ kind: "loading" });
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [quizzesPage, setQuizzesPage] = useState(1);
+  const [quizzesTotal, setQuizzesTotal] = useState(0);
+  const [lastPage, setLastPage] = useState(1);
   const [quizzesLoading, setQuizzesLoading] = useState(true);
   const [quizzesError, setQuizzesError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
@@ -115,22 +119,6 @@ export function UserProfilePage() {
         const { data } = await usersApi.publicProfile(username);
         if (!active) return;
         setView({ kind: "ready", profile: data });
-
-        // Quizzes are supporting content: a failure here keeps the profile
-        // readable instead of discarding it.
-        try {
-          const list = await quizApi.list({ author: username });
-          if (!active) return;
-          setQuizzes(list.data);
-          setQuizzesError(null);
-        } catch (err) {
-          if (!active) return;
-          console.error("Failed to fetch author quizzes:", err);
-          setQuizzes([]);
-          setQuizzesError(getErrorMessage(err, "Could not load this user's quizzes."));
-        } finally {
-          if (active) setQuizzesLoading(false);
-        }
       } catch (err) {
         if (!active) return;
         console.error("Failed to fetch public profile:", err);
@@ -145,6 +133,36 @@ export function UserProfilePage() {
       active = false;
     };
   }, [username, attempt]);
+
+  // Quizzes are supporting content: a failure here keeps the profile readable
+  // instead of discarding it, and paging never refetches the profile itself.
+  useEffect(() => {
+    if (!username) return;
+    let active = true;
+
+    (async () => {
+      try {
+        setQuizzesLoading(true);
+        const { data } = await quizApi.list({ author: username, page: quizzesPage });
+        if (!active) return;
+        setQuizzes(data.data);
+        setQuizzesTotal(data.meta.total);
+        setLastPage(data.meta.last_page);
+        setQuizzesError(null);
+      } catch (err) {
+        if (!active) return;
+        console.error("Failed to fetch author quizzes:", err);
+        setQuizzes([]);
+        setQuizzesError(getErrorMessage(err, "Could not load this user's quizzes."));
+      } finally {
+        if (active) setQuizzesLoading(false);
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [username, quizzesPage, attempt]);
 
   if (view.kind === "loading") {
     return (
@@ -219,7 +237,7 @@ export function UserProfilePage() {
   const views = quizzes.reduce((sum, quiz) => sum + (quiz.views ?? 0), 0);
 
   const stats: { label: string; value: number }[] = [
-    { label: "Quizzes", value: quizzes.length },
+    { label: "Quizzes", value: quizzesTotal || quizzes.length },
     { label: "Questions", value: questions },
     { label: "Views", value: views },
   ];
@@ -321,10 +339,17 @@ export function UserProfilePage() {
             <p className="text-sm font-medium text-slate-500 dark:text-slate-400">No quizzes yet.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {quizzes.map((quiz) => (
-              <QuizCard key={quiz.quiz_id} quiz={quiz} showAuthorLink={false} />
-            ))}
+          <div className="flex flex-col gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {quizzes.map((quiz) => (
+                <QuizCard key={quiz.quiz_id} quiz={quiz} showAuthorLink={false} />
+              ))}
+            </div>
+            <Pagination
+              currentPage={quizzesPage}
+              lastPage={lastPage}
+              onPageChange={setQuizzesPage}
+            />
           </div>
         )}
       </section>

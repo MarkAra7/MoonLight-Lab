@@ -82,6 +82,33 @@ export interface Quiz {
   average_score?: number | null;
 }
 
+/**
+ * Laravel resource-collection pagination envelope.
+ *
+ * `data` holds the rows, `links` carries the first/last/prev/next page URLs and
+ * `meta` carries the page numbers plus the total row count. `links` values are
+ * `null` where that neighbour does not exist, and `from` / `to` are `null` on
+ * an empty page.
+ */
+export interface Paged<T> {
+  data: T[];
+  links: {
+    first: string | null;
+    last: string | null;
+    prev: string | null;
+    next: string | null;
+  };
+  meta: {
+    current_page: number;
+    from: number | null;
+    last_page: number;
+    path: string;
+    per_page: number;
+    to: number | null;
+    total: number;
+  };
+}
+
 /** Comment as returned by CommentController (`/quizzes/:id/comments`). */
 export interface Comment {
   id: number;
