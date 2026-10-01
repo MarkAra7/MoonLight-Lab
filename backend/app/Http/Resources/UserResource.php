@@ -41,8 +41,20 @@ class UserResource extends JsonResource
         if ($this->isProfileView) {
             $data['is_verified'] = $this->email_verified_at !== null;
 
-            if ($this->is_private && (!$this->requestUser || !$this->requestUser->is($this->resource))) {
+            $isOwner = $this->requestUser !== null && $this->requestUser->is($this->resource);
+
+            // Email is personal data — never expose it to other users, even on
+            // public profiles. Only the profile owner sees their own email.
+            if (!$isOwner) {
+                unset($data['email']);
+                unset($data['email_verified_at']);
+            }
+
+            // Defense in depth: even if a private profile somehow renders,
+            // hide personal fields from everyone except the owner.
+            if ($this->is_private && !$isOwner) {
                 unset($data['first_name']);
+                unset($data['last_name']);
                 unset($data['country']);
             }
         }

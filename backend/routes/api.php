@@ -30,7 +30,7 @@ Route::prefix('v1')->group(function () {
 
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
-    Route::get('/users/profile/{username}', [UserController::class, 'publicProfile']);
+    Route::get('/users/profile/{username}', [UserController::class, 'publicProfile'])->middleware('optional.sanctum');
     Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:5,10,email');
     Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 

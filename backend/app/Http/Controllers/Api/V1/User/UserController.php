@@ -58,6 +58,8 @@ class UserController extends Controller
     {
         $user = User::where('username', $username)->with(['role', 'avatar'])->firstOrFail();
 
+        Gate::authorize('view', $user);
+
         return UserResource::make($user)->withProfile(true, $request->user());
     }
 }

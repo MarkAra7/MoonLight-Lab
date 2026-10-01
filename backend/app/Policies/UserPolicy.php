@@ -20,14 +20,17 @@ class UserPolicy
 
     /**
      * Determine whether the user can view the model.
+     *
+     * The first parameter is nullable so the public profile endpoint
+     * (`GET /users/profile/{username}`) works for unauthenticated guests.
      */
-    public function view(User $user, User $model): Response
+    public function view(?User $user, User $model): Response
     {
-        if ($user->role?->title === Role::ADMIN) {
+        if ($user?->role?->title === Role::ADMIN) {
             return Response::allow();
         }
 
-        if ($model->is_private && $user->id !== $model->id) {
+        if ($model->is_private && ($user === null || $user->id !== $model->id)) {
             return Response::deny('This profile is private.');
         }
 
