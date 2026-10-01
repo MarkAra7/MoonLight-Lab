@@ -31,6 +31,7 @@ export interface User {
   role_id?: number | null;
   avatar_id?: number | null;
   is_private?: boolean;
+  is_verified?: boolean;
   role?: Role | null;
   avatar?: Media | null;
   email_verified_at?: string | null;
@@ -58,6 +59,7 @@ export interface Category {
 export interface QuizAuthor {
   id?: number;
   name?: string | null;
+  username?: string | null;
   avatar?: Media | null;
 }
 

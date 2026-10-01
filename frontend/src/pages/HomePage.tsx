@@ -1,11 +1,10 @@
 import { Link } from "react-router-dom";
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Badge } from "flowbite-react";
 import { useAuth } from "@/context/AuthContext";
 import { getErrorMessage } from "@/api";
 import { quizApi } from "@/api/quiz";
 import { miscApi } from "@/api/misc";
-import { mediaUrl, truncate } from "@/utils/helpers";
+import { QuizCard } from "@/components/QuizCard";
 import type { Category, Quiz } from "@/api/types";
 
 const features = [
@@ -315,55 +314,7 @@ export function HomePage() {
         ) : (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {quizzes.map((quiz) => (
-              <Link
-                key={quiz.quiz_id}
-                to={`/quizzes/${quiz.quiz_id}`}
-                className="group rounded-2xl border border-slate-200 bg-white p-6 transition-all duration-300 hover:border-sky-500/20 hover:shadow-lg dark:border-white/[0.06] dark:bg-white/[0.02] dark:hover:border-sky-500/20"
-              >
-                {mediaUrl(quiz.media?.file_path ?? quiz.media?.url) && (
-                  <img
-                    src={mediaUrl(quiz.media?.file_path ?? quiz.media?.url)}
-                    alt={quiz.title}
-                    className="mb-4 h-40 w-full rounded-lg object-cover"
-                  />
-                )}
-                <h3 className="mb-2 text-lg font-bold text-slate-900 group-hover:text-sky-600 dark:text-white dark:group-hover:text-sky-400">
-                  {quiz.title}
-                </h3>
-                {quiz.description && (
-                  <p className="mb-3 line-clamp-2 text-sm text-slate-600 dark:text-slate-400">
-                    {truncate(quiz.description, 120)}
-                  </p>
-                )}
-                <div className="flex flex-wrap items-center gap-2">
-                  {quiz.category && (
-                    <Badge color="info" size="sm">
-                      {quiz.category.name}
-                    </Badge>
-                  )}
-                  <Badge color="gray" size="sm">
-                    {quiz.questions_count} questions
-                  </Badge>
-                </div>
-                {quiz.author && (
-                  <div className="mt-4 flex items-center gap-2 border-t border-slate-100 pt-4 dark:border-white/[0.06]">
-                    {quiz.author.avatar && mediaUrl(quiz.author.avatar.file_path ?? quiz.author.avatar.url) ? (
-                      <img
-                        src={mediaUrl(quiz.author.avatar.file_path ?? quiz.author.avatar.url)}
-                        alt={quiz.author.name ?? undefined}
-                        className="h-6 w-6 rounded-full"
-                      />
-                    ) : (
-                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-sky-100 text-xs font-semibold text-sky-600 dark:bg-sky-900/30 dark:text-sky-400">
-                        {quiz.author.name?.charAt(0)}
-                      </div>
-                    )}
-                    <span className="truncate text-sm text-slate-600 dark:text-slate-400">
-                      {quiz.author.name}
-                    </span>
-                  </div>
-                )}
-              </Link>
+              <QuizCard key={quiz.quiz_id} quiz={quiz} showAuthorLink />
             ))}
           </div>
         )}
