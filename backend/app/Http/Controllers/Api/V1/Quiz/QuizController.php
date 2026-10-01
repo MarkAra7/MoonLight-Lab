@@ -13,12 +13,15 @@ use Illuminate\Support\Facades\Gate;
 
 class QuizController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         return QuizResource::collection(Quiz::with(['category', 'media', 'author.avatar'])
             ->withCount('questions')
             ->where('is_public', true)
             ->whereHas('quizStatus', fn($q) => $q->where('status', 'published'))
+            ->when($request->filled('author'), function ($query) use ($request) {
+                $query->whereHas('author', fn($q) => $q->where('username', $request->input('author')));
+            })
             ->latest()
             ->get());
     }
