@@ -76,7 +76,7 @@ export function AppLayout() {
                   <span className="block text-sm font-semibold text-slate-900 dark:text-white">{user.name || user.username}</span>
                   <span className="block truncate text-xs text-slate-500 dark:text-slate-400">{user.email}</span>
                 </DropdownHeader>
-                <DropdownItem as={Link} to="/profile">
+                <DropdownItem as={Link} to={`/users/${user.username}`}>
                   Profile
                 </DropdownItem>
                 <DropdownItem as={Link} to="/my-quizzes">

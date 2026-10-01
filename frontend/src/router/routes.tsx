@@ -4,6 +4,7 @@ import { LoginPage } from "@/pages/auth/LoginPage";
 import { RegisterPage } from "@/pages/auth/RegisterPage";
 import { VerifyEmailPage } from "@/pages/auth/VerifyEmailPage";
 import { SettingsPage } from "@/pages/settings/SettingsPage";
+import { UserProfilePage } from "@/pages/profile/UserProfilePage";
 import ShowQ from "@/pages/quiz/ShowQ";
 
 export interface AppRoute {
@@ -17,5 +18,6 @@ export const routes: AppRoute[] = [
   { path: "/register", element: <RegisterPage /> },
   { path: "/verify-email", element: <VerifyEmailPage /> },
   { path: "/settings", element: <SettingsPage /> },
+  { path: "/users/:username", element: <UserProfilePage /> },
   { path: "/quizzes/:quizId", element: <ShowQ /> },
 ];
