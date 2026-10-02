@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, useNavigate, useSearchParams } from "react-route
 import { Avatar, Dropdown, DropdownDivider, DropdownHeader, DropdownItem } from "flowbite-react";
 import { useAuth } from "@/context/AuthContext";
 import { mediaUrl } from "@/utils/helpers";
+import { NotificationBell } from "@/components/NotificationBell";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -94,7 +95,21 @@ export function AppLayout() {
               Home
             </NavLink>
 
+            {user?.role?.title === "student" && (
+              <NavLink to="/my-classes" className={navLinkClass}>
+                My Classes
+              </NavLink>
+            )}
+
+            {(user?.role?.title === "teacher" || user?.role?.title === "admin") && (
+              <NavLink to="/teacher/classes" className={navLinkClass}>
+                Classes
+              </NavLink>
+            )}
+
             <ThemeToggle />
+
+            {user && <NotificationBell />}
 
             {user ? (
               <Dropdown

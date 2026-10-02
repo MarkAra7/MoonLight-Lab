@@ -17,14 +17,24 @@ export interface AssignmentPayload {
   due_at?: string | null;
 }
 
+export interface ClassLookup {
+  id: number;
+  name: string;
+  description?: string | null;
+  teacher_name?: string | null;
+}
+
 export const classApi = {
+  lookup: (code: string) => apiClient.get<ClassLookup>(`/classes/lookup/${code}`),
   teacherIndex: () => apiClient.get("/teacher/classes"),
   teacherCreate: (payload: ClassPayload) => apiClient.post("/teacher/classes", payload),
   teacherShow: (id: number | string) => apiClient.get(`/teacher/classes/${id}`),
   teacherUpdate: (id: number | string, payload: Partial<ClassPayload>) =>
     apiClient.put(`/teacher/classes/${id}`, payload),
   teacherRemove: (id: number | string) => apiClient.delete(`/teacher/classes/${id}`),
-  regenerateCode: (id: number | string) => apiClient.post(`/teacher/classes/${id}/regenerate-code`),
+  regenerateCode: (id: number | string) =>
+    apiClient.post(`/teacher/classes/${id}/regenerate-code`),
+  disableCode: (id: number | string) => apiClient.post(`/teacher/classes/${id}/disable-code`),
   students: (id: number | string) => apiClient.get(`/teacher/classes/${id}/students`),
   addStudent: (id: number | string, payload: { email: string }) =>
     apiClient.post(`/teacher/classes/${id}/students`, payload),
