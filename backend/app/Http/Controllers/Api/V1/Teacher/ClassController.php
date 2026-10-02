@@ -100,6 +100,15 @@ class ClassController extends Controller
         return response()->json($class);
     }
 
+    public function disableCode(Request $request, Classes $class)
+    {
+        if ($class->teacher_id !== $request->user()->id) abort(403);
+
+        $class->update(['code_expires_at' => now()]);
+
+        return response()->json(['message' => 'Invite link disabled.']);
+    }
+
     public function students(Request $request, Classes $class)
     {
         if ($class->teacher_id !== $request->user()->id) abort(403);

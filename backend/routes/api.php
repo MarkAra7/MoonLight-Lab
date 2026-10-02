@@ -125,6 +125,7 @@ Route::prefix('v1')->group(function () {
         Route::put('/teacher/classes/{class}', [ClassController::class, 'update']);
         Route::delete('/teacher/classes/{class}', [ClassController::class, 'destroy']);
         Route::post('/teacher/classes/{class}/regenerate-code', [ClassController::class, 'regenerateCode']);
+        Route::post('/teacher/classes/{class}/disable-code', [ClassController::class, 'disableCode']);
         Route::get('/teacher/classes/{class}/students', [ClassController::class, 'students']);
         Route::post('/teacher/classes/{class}/students', [ClassController::class, 'addStudent']);
         Route::delete('/teacher/classes/{class}/students/{student}', [ClassController::class, 'removeStudent']);
