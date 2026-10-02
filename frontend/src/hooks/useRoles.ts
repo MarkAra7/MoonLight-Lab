@@ -2,10 +2,6 @@ import { useEffect, useState } from "react";
 import { miscApi } from "@/api";
 import type { Role } from "@/api/types";
 
-/**
- * Fetches and caches the list of available roles.
- * Used by the registration form to populate the role selector.
- */
 export function useRoles() {
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);

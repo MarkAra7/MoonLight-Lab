@@ -12,13 +12,11 @@ import type { Quiz, User } from "@/api/types";
 const linkFocusRing =
   "focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 dark:focus-visible:ring-sky-400 dark:focus-visible:ring-offset-moon-dark";
 
-/** Page cursor kept next to the term it belongs to, so a new `q` restarts at page 1. */
 interface PageCursor {
   q: string;
   page: number;
 }
 
-/** One hit of `GET /users/search` — a public profile, so no email. */
 function PersonCard({ person }: { person: User }) {
   const avatar = person.avatar ? mediaUrl(person.avatar.file_path ?? person.avatar.url) : "";
   const initial =

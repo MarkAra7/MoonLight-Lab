@@ -11,7 +11,6 @@ import { QuizCard } from "@/components/QuizCard";
 import { formatDate, mediaUrl } from "@/utils/helpers";
 import type { Quiz, User } from "@/api/types";
 
-/** Terminal UI states that replace the whole page body. */
 type ViewState =
   | { kind: "loading" }
   | { kind: "private" }
@@ -19,7 +18,6 @@ type ViewState =
   | { kind: "error"; message: string }
   | { kind: "ready"; profile: User };
 
-/** Read the HTTP status off an axios rejection; `undefined` for anything else. */
 function statusOf(error: unknown): number | undefined {
   return axios.isAxiosError(error) ? error.response?.status : undefined;
 }
@@ -134,8 +132,6 @@ export function UserProfilePage() {
     };
   }, [username, attempt]);
 
-  // Quizzes are supporting content: a failure here keeps the profile readable
-  // instead of discarding it, and paging never refetches the profile itself.
   useEffect(() => {
     if (!username) return;
     let active = true;

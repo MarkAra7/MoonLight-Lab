@@ -14,8 +14,6 @@ import {
   LANGUAGE_OPTIONS,
 } from "@/config/profileOptions";
 
-/* Reference-style input: translucent surface that lights up with a sky-blue
-   border on focus. Theme-aware via Tailwind dark: variants. */
 const inputClasses = [
   "w-full rounded-[10px] border bg-slate-50 px-4 py-3.5 text-sm text-slate-900",
   "outline-none transition-colors duration-200",
@@ -29,11 +27,6 @@ const primaryButtonClasses =
 
 const fieldErrorClasses = "mt-1.5 text-sm text-red-600 dark:text-red-400";
 
-/**
- * Pull the first Laravel validation message for each requested field out of a
- * 422 `{ message, errors: { field: ["msg"] } }` response. Unknown fields are
- * ignored so the caller can fall back to the top-level message.
- */
 function extractFieldErrors<T extends string>(
   error: unknown,
   fields: readonly T[]
@@ -49,10 +42,6 @@ function extractFieldErrors<T extends string>(
   }
   return result;
 }
-
-/* ------------------------------------------------------------------ */
-/* Section card                                                        */
-/* ------------------------------------------------------------------ */
 
 interface SectionCardProps {
   title: string;
@@ -71,10 +60,6 @@ function SectionCard({ title, description, children }: SectionCardProps) {
     </section>
   );
 }
-
-/* ------------------------------------------------------------------ */
-/* Profile                                                             */
-/* ------------------------------------------------------------------ */
 
 interface ProfileForm {
   first_name: string;
@@ -104,8 +89,6 @@ function ProfileSection({ user, onSaved }: { user: User; onSaved: () => void }) 
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<ProfileFieldErrors>({});
 
-  // Re-seed from the server only when the user record actually changed
-  // (e.g. after refresh()), never on every render — unsaved edits survive.
   const lastUserRef = useRef({ id: user.id, updatedAt: user.updated_at });
   useEffect(() => {
     const prev = lastUserRef.current;
@@ -278,9 +261,6 @@ function ProfileSection({ user, onSaved }: { user: User; onSaved: () => void }) 
   );
 }
 
-/* ------------------------------------------------------------------ */
-/* Privacy                                                             */
-/* ------------------------------------------------------------------ */
 
 function PrivacySection({ user, onSaved }: { user: User; onSaved: () => void }) {
   const [isPrivate, setIsPrivate] = useState(Boolean(user.is_private));
@@ -328,9 +308,6 @@ function PrivacySection({ user, onSaved }: { user: User; onSaved: () => void }) 
   );
 }
 
-/* ------------------------------------------------------------------ */
-/* Email verification                                                  */
-/* ------------------------------------------------------------------ */
 
 function EmailSection({ user, onEmailChanged }: { user: User; onEmailChanged: () => void }) {
   const [resending, setResending] = useState(false);
@@ -392,16 +369,12 @@ function EmailSection({ user, onEmailChanged }: { user: User; onEmailChanged: ()
   );
 }
 
-/* ------------------------------------------------------------------ */
-/* Email-change wizard                                                 */
-/* ------------------------------------------------------------------ */
 
 const EMAIL_CHANGE_FIELDS = ["current_password", "new_email", "token"] as const;
 type EmailChangeFieldErrors = Partial<Record<(typeof EMAIL_CHANGE_FIELDS)[number], string>>;
 
 const WIZARD_STEPS = ["Details", "Verify new email", "Confirm current email"] as const;
 
-/** Which step a pending change resumes at, based on what is already verified. */
 function deriveStep(change: EmailChangeState): 1 | 2 | 3 {
   if (change.new_email_verified_at && !change.current_email_verified_at) return 3;
   return 2;
@@ -483,8 +456,6 @@ function EmailChangeWizard({ onEmailChanged }: { onEmailChanged: () => void }) {
   const [success, setSuccess] = useState("");
   const [deepLinkAlert, setDeepLinkAlert] = useState<DeepLinkAlert | null>(null);
 
-  // On mount: resume a pending change, then honour a `?email_change_token=`
-  // deep link from the mail links (step=new_email | current_email).
   useEffect(() => {
     let active = true;
     (async () => {
@@ -498,7 +469,7 @@ function EmailChangeWizard({ onEmailChanged }: { onEmailChanged: () => void }) {
           setNewEmail(data.change.new_email);
         }
       } catch {
-        // No pending change — leave the wizard collapsed.
+        setChange(null);
       } finally {
         if (active) setLoading(false);
       }
@@ -550,7 +521,6 @@ function EmailChangeWizard({ onEmailChanged }: { onEmailChanged: () => void }) {
           });
         } finally {
           if (active) setSubmitting(false);
-          // Clear the params so a refresh does not re-submit the token.
           setSearchParams({}, { replace: true });
         }
       }
@@ -884,9 +854,6 @@ function EmailChangeWizard({ onEmailChanged }: { onEmailChanged: () => void }) {
   );
 }
 
-/* ------------------------------------------------------------------ */
-/* Page                                                                */
-/* ------------------------------------------------------------------ */
 
 export function SettingsPage() {
   const { user, loading, refresh } = useAuth();

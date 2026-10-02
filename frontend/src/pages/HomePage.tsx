@@ -214,7 +214,6 @@ export function HomePage() {
         ))}
       </div>
 
-      {/* Categories strip */}
       {categories.length > 0 && (
         <div className="mt-16">
           <div className="mb-6">

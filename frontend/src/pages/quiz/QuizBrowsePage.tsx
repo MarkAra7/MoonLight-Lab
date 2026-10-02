@@ -12,7 +12,6 @@ interface PageCursor {
   page: number;
 }
 
-/** `miscApi.category` is untyped, so narrow the payload to a display name. */
 function readCategoryName(payload: unknown): string | null {
   if (typeof payload !== "object" || payload === null) return null;
 

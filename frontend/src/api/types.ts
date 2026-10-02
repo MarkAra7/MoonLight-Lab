@@ -1,11 +1,3 @@
-/**
- * Shared domain types for the Laravel API.
- *
- * Shapes are derived from the backend controllers (Api\V1) and the
- * consumers in this frontend (components, AuthContext, hooks).
- */
-
-/** Backend media member: either a stored `file_path` or an external `url`. */
 export interface Media {
   file_id?: string;
   file_path?: string | null;
@@ -18,7 +10,6 @@ export interface Media {
   provider?: string | null;
 }
 
-/** Authenticated user as returned by UserResource (`/user`, login, register). */
 export interface User {
   id: number;
   first_name?: string | null;
@@ -39,14 +30,12 @@ export interface User {
   updated_at?: string | null;
 }
 
-/** Role as returned by RoleController::index (`/roles`). */
 export interface Role {
   id: number;
   title: string;
   description?: string | null;
 }
 
-/** Category as returned by CategoryController (`/categories`). */
 export interface Category {
   category_id: number;
   name: string;
@@ -55,7 +44,6 @@ export interface Category {
   quizzes_count?: number | null;
 }
 
-/** Author relation embedded in quiz payloads. */
 export interface QuizAuthor {
   id?: number;
   name?: string | null;
@@ -63,7 +51,6 @@ export interface QuizAuthor {
   avatar?: Media | null;
 }
 
-/** Quiz as returned by QuizController (`/quizzes`, `/quizzes/:id`). */
 export interface Quiz {
   quiz_id: number;
   title: string;
@@ -109,7 +96,6 @@ export interface Paged<T> {
   };
 }
 
-/** Comment as returned by CommentController (`/quizzes/:id/comments`). */
 export interface Comment {
   id: number;
   user?: string | null;
@@ -119,7 +105,6 @@ export interface Comment {
   replies?: Comment[];
 }
 
-/** Rating summary as returned by RatingController::index. */
 export interface RatingSummary {
   average: number;
   count: number;
@@ -131,7 +116,6 @@ export interface RatingSummary {
   }[];
 }
 
-/** Current user's rating as returned by RatingController::userRating. */
 export interface MyRating {
   rating: number | null;
 }

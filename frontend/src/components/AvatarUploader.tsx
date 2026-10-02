@@ -14,16 +14,6 @@ import { getErrorMessage, mediaApi, settingsApi } from "@/api";
 import type { User } from "@/api/types";
 import { mediaUrl } from "@/utils/helpers";
 
-/**
- * Avatar picker for the settings profile card.
- *
- * Flow: hidden file input -> object URL -> crop modal (react-easy-crop, fixed
- * 1:1) -> canvas crop to a <=512px JPEG -> `mediaApi.uploadPhoto`
- * (`POST /media`) -> `settingsApi.updateProfile(user.id, { avatar_id })` ->
- * `onChanged()`, which the parent uses to `refresh()` the user so the avatar
- * relation comes back from `GET /user`. Detaching uses the same endpoint with
- * `avatar_id: null`; the backend drops the orphaned media file itself.
- */
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
 const MAX_SIDE_PX = 512;
 const JPEG_QUALITY = 0.9;
@@ -31,7 +21,6 @@ const JPEG_QUALITY = 0.9;
 const primaryButtonClasses =
   "bg-sky-600 enabled:hover:bg-sky-500 dark:bg-sky-400 dark:text-slate-900 dark:enabled:hover:bg-sky-300";
 
-/** Client-side failure whose message is meant for the user, unlike an Axios error. */
 class UploadError extends Error {}
 
 function loadImage(src: string): Promise<HTMLImageElement> {
@@ -47,7 +36,6 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
-/** Redraw `area` of the source image into a JPEG no larger than 512px on its longest side. */
 async function cropToAvatarFile(objectUrl: string, area: Area): Promise<File> {
   const image = await loadImage(objectUrl);
   const scale = Math.min(1, MAX_SIDE_PX / Math.max(area.width, area.height));
@@ -75,7 +63,6 @@ async function cropToAvatarFile(objectUrl: string, area: Area): Promise<File> {
 
 export interface AvatarUploaderProps {
   user: User;
-  /** Awaited after a successful save so the parent can reload the user. */
   onChanged: () => Promise<void> | void;
 }
 
@@ -261,9 +248,6 @@ export function AvatarUploader({ user, onChanged }: AvatarUploaderProps) {
       )}
 
       {objectUrl &&
-        // Portalled to <body>: the .glass-moon card sets `backdrop-blur` in dark
-        // mode, and a filtered ancestor becomes the containing block for
-        // `position: fixed`, which would trap this overlay inside that card.
         createPortal(
           <div
             role="dialog"

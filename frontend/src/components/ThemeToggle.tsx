@@ -96,7 +96,7 @@ export function ThemeToggle({ className = "" }: ThemeToggleProps) {
     try {
       localStorage.setItem(THEME_KEY, next ? SAVED.dark : SAVED.light);
     } catch {
-      // ignore — theme still applies for this session
+      return;
     }
   };
 

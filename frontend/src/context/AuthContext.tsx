@@ -16,7 +16,6 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 async function fetchCurrentUser(): Promise<User> {
   const { data } = await authApi.me();
-  // `/user` is a UserResource (wrapped in `{ data: ... }`); tolerate an unwrapped user too.
   return "data" in data ? data.data : data;
 }
 
@@ -81,14 +80,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    try {
-      await authApi.logout();
-    } catch {
-      // ignore — the token is cleared below regardless
-    } finally {
-      tokenStore.clear();
-      setUser(null);
-    }
+    await authApi.logout().catch(() => undefined);
+    tokenStore.clear();
+    setUser(null);
   }, []);
 
   const value: AuthContextValue = { user, loading, login, register, logout, refresh };

@@ -5,8 +5,6 @@ import { useAuth } from "@/context/AuthContext";
 import { getErrorMessage } from "@/api";
 import { useRoles } from "@/hooks/useRoles";
 
-/* Reference-style input: translucent surface that lights up with a sky-blue
-   border on focus. Theme-aware via Tailwind dark: variants. */
 const inputClasses = [
   "w-full rounded-[10px] border bg-slate-50 px-4 py-3.5 text-sm text-slate-900",
   "outline-none transition-colors duration-200",

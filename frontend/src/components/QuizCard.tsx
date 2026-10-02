@@ -5,11 +5,6 @@ import type { Quiz } from "@/api/types";
 
 export interface QuizCardProps {
   quiz: Quiz;
-  /**
-   * When false (or when the author has no username) the author row renders as
-   * plain text instead of a link — used on an author's own profile page, where
-   * linking back to the profile you are already on is noise.
-   */
   showAuthorLink?: boolean;
 }
 

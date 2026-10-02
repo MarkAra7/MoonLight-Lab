@@ -198,7 +198,6 @@ const ShowQ = () => {
 				</div>
 			</div>
 
-			{/* Rating window */}
 			<section className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 dark:border-white/[0.06] dark:bg-white/[0.03]">
 				<h2 className="mb-3 text-lg font-bold text-slate-900 dark:text-white">Rate this Quiz</h2>
 				{user ? (
@@ -247,7 +246,6 @@ const ShowQ = () => {
 				)}
 			</section>
 
-			{/* Comments */}
 			<section className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 dark:border-white/[0.06] dark:bg-white/[0.03]">
 				<h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-slate-900 dark:text-white">
 					Comments ({comments.length})

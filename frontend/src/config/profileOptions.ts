@@ -1,10 +1,3 @@
-/**
- * Static option lists for the profile form.
- *
- * Country values are English short names (ISO 3166-1) — this matches the
- * free-text values the app has historically stored (e.g. "Latvia").
- * Language values are ISO 639-1 codes (e.g. "en", "lv").
- */
 export interface SelectOption {
   value: string;
   label: string;
@@ -253,10 +246,8 @@ export const LANGUAGE_OPTIONS: readonly SelectOption[] = [
 const COUNTRY_VALUES = new Set(COUNTRY_OPTIONS.map((o) => o.value));
 const LANGUAGE_VALUES = new Set(LANGUAGE_OPTIONS.map((o) => o.value));
 
-/** True when the stored country value has a matching dropdown option. */
 export const isKnownCountry = (value: string | null | undefined): boolean =>
   Boolean(value && COUNTRY_VALUES.has(value));
 
-/** True when the stored language value has a matching dropdown option. */
 export const isKnownLanguage = (value: string | null | undefined): boolean =>
   Boolean(value && LANGUAGE_VALUES.has(value));

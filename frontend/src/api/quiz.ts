@@ -1,13 +1,9 @@
 import apiClient from "./client";
 import type { Comment, MyRating, Paged, Quiz, RatingSummary } from "./types";
 
-/** Query filters accepted by `GET /quizzes` (all optional, all filter-combined). */
 export interface QuizListParams {
-  /** Author username. */
   author?: string;
-  /** Category id. */
   category?: string | number;
-  /** Free text matched against title / description. */
   search?: string;
   page?: number;
   per_page?: number;
@@ -50,7 +46,6 @@ export interface CommentPayload {
   body: string;
 }
 
-/** Response of QuizStatsController::stats (`/quizzes/:id/stats`). */
 export interface QuizStats {
   quiz: {
     quiz_id: number;

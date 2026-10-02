@@ -17,11 +17,6 @@ export interface RegisterPayload {
   role: string;
 }
 
-/**
- * Response of `/login` and `/register` (AuthController): `{ user, token }`.
- * The optional `access_token` / `data.token` members are kept because
- * AuthContext defensively reads all three token locations.
- */
 export interface AuthResponse {
   user: User;
   token: string;
