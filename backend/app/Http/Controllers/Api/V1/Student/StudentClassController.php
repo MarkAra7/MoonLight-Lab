@@ -87,24 +87,46 @@ class StudentClassController extends Controller
         }
 
         if ($existing && $existing->status === 'pending') {
-            return response()->json(['message' => 'Request already sent. Waiting for approval.'], 422);
+            return response()->json(['message' => 'Request already sent.'], 422);
         }
 
         ClassStudent::create([
             'class_id' => $class->id,
             'student_id' => $request->user()->id,
-            'status' => 'pending',
+            'status' => 'active',
             'joined_by' => 'code',
+            'added_by' => null,
+            'joined_at' => now(),
         ]);
 
         Notification::create([
             'user_id' => $class->teacher_id,
-            'type' => 'join_request',
-            'title' => 'New join request',
-            'body' => "{$request->user()->first_name} {$request->user()->last_name} wants to join \"{$class->name}\".",
+            'type' => 'student_joined',
+            'title' => 'New student joined',
+            'body' => "{$request->user()->first_name} {$request->user()->last_name} joined \"{$class->name}\".",
             'data' => ['class_id' => $class->id, 'student_id' => $request->user()->id],
         ]);
 
-        return response()->json(['message' => 'Join request sent. Waiting for teacher approval.']);
+        return response()->json(['message' => 'Joined class.']);
+    }
+
+    public function lookup(Request $request, string $code)
+    {
+        $class = Classes::where('code', strtoupper($code))->with('teacher')->first();
+
+        if (!$class) {
+            return response()->json(['message' => 'Invalid code.'], 404);
+        }
+
+        if (!$class->isCodeValid()) {
+            return response()->json(['message' => 'Code has expired.'], 422);
+        }
+
+        return response()->json([
+            'id' => $class->id,
+            'name' => $class->name,
+            'description' => $class->description,
+            'teacher_name' => $class->teacher?->name,
+        ]);
     }
 }

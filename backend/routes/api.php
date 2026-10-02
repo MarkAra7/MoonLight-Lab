@@ -32,6 +32,7 @@ Route::prefix('v1')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
     Route::get('/users/profile/{username}', [UserController::class, 'publicProfile'])->middleware('optional.sanctum');
     Route::get('/users/search', [UserController::class, 'search'])->middleware('optional.sanctum');
+    Route::get('/classes/lookup/{code}', [StudentClassController::class, 'lookup'])->middleware('optional.sanctum');
     Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:5,10,email');
     Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
@@ -80,7 +81,7 @@ Route::prefix('v1')->group(function () {
 
         Route::get('/my-classes', [StudentClassController::class, 'myClasses']);
         Route::get('/my-classes/{class}', [StudentClassController::class, 'classDetail']);
-        Route::post('/classes/join', [StudentClassController::class, 'join']);
+        Route::post('/classes/join', [StudentClassController::class, 'join'])->middleware('throttle:6,1');
         Route::get('/my-attempts', [QuizAttemptController::class, 'myAttempts']);
         Route::post('/quiz-attempts', [QuizAttemptController::class, 'store']);
 
