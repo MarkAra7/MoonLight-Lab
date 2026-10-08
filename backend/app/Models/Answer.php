@@ -22,6 +22,11 @@ class Answer extends Model
         'media_id',
     ];
 
+    protected $casts = [
+        'config' => 'array',
+        'is_correct' => 'boolean',
+    ];
+
     public function question()
     {
         return $this->belongsTo(Question::class, 'question_id', 'question_id');

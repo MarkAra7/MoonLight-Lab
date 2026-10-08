@@ -33,7 +33,7 @@ class QuestionController extends Controller
             'question_type' => 'required|string|exists:question_types,question_type_id',
             'media_id' => 'nullable|string|exists:media,file_id',
             'display_order' => 'nullable|integer|min:0',
-            'config' => 'nullable|json',
+            'config' => 'nullable|array',
             'is_private' => 'boolean',
         ]);
 
@@ -64,7 +64,7 @@ class QuestionController extends Controller
             'question_type' => 'sometimes|string|exists:question_types,question_type_id',
             'media_id' => 'nullable|string|exists:media,file_id',
             'display_order' => 'nullable|integer|min:0',
-            'config' => 'nullable|json',
+            'config' => 'nullable|array',
             'is_private' => 'boolean',
         ]);
 

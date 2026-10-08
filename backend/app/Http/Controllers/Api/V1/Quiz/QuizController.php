@@ -32,26 +32,27 @@ class QuizController extends Controller
 
     public function store(StoreQuizRequest $request)
     {
-        $status = QuizStatus::firstOrCreate(['status' => 'draft']);
-
         $quiz = Quiz::create([
             'title' => $request->title,
             'description' => $request->description,
             'author_id' => $request->user()->id,
-            'quiz_status_id' => $status->quiz_status_id,
+            'quiz_status_id' => $this->statusId($request->input('status', 'draft')),
             'category_id' => $request->category_id,
             'media_id' => $request->media_id,
+            'language' => $request->language ?? 'en',
+            'difficulty' => $request->difficulty,
+            'time_limit' => $request->time_limit,
             'is_public' => $request->boolean('is_public'),
         ]);
 
-        return response()->json(new QuizResource($quiz->load(['category', 'media', 'author.avatar'])), 201);
+        return response()->json(new QuizResource($quiz->load(['category', 'media', 'author.avatar', 'quizStatus'])), 201);
     }
 
     public function show(Quiz $quiz, Request $request)
     {
         Gate::authorize('view', $quiz);
 
-        $quiz->load(['category', 'media', 'author.avatar']);
+        $quiz->load(['category', 'media', 'author.avatar', 'quizStatus']);
         $quiz->load(['questions' => function ($q) use ($request) {
             $q->visibleTo($request->user())->with('answers')->orderBy('display_order');
         }]);
@@ -72,9 +73,16 @@ class QuizController extends Controller
     {
         Gate::authorize('update', $quiz);
 
-        $quiz->update($request->validated());
+        $data = $request->validated();
 
-        return response()->json(new QuizResource($quiz->load(['category', 'media', 'author.avatar'])));
+        if (array_key_exists('status', $data)) {
+            $data['quiz_status_id'] = $this->statusId($data['status']);
+            unset($data['status']);
+        }
+
+        $quiz->update($data);
+
+        return response()->json(new QuizResource($quiz->load(['category', 'media', 'author.avatar', 'quizStatus'])));
     }
 
     public function destroy(Quiz $quiz)
@@ -84,6 +92,14 @@ class QuizController extends Controller
         $quiz->delete();
 
         return response()->noContent();
+    }
+
+    /**
+     * Resolve a status name (draft/published/archived) to its primary key.
+     */
+    private function statusId(string $status): int
+    {
+        return QuizStatus::firstOrCreate(['status' => $status])->quiz_status_id;
     }
 
     private function perPage(Request $request): int

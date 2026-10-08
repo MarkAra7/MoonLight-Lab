@@ -18,6 +18,10 @@ class StoreQuizRequest extends FormRequest
             'description' => ['nullable', 'string'],
             'category_id' => ['nullable', 'string', 'exists:categories,category_id'],
             'media_id' => ['nullable', 'string', 'exists:media,file_id'],
+            'language' => ['nullable', 'string', 'max:50'],
+            'difficulty' => ['nullable', 'string', 'in:easy,medium,hard'],
+            'time_limit' => ['nullable', 'integer', 'min:0'],
+            'status' => ['sometimes', 'string', 'in:draft,published,archived'],
             'is_public' => ['boolean'],
         ];
     }

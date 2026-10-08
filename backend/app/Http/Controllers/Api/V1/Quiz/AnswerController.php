@@ -30,7 +30,7 @@ class AnswerController extends Controller
             'is_correct' => 'required|boolean',
             'media_id' => 'nullable|string|exists:media,file_id',
             'display_order' => 'nullable|integer|min:0',
-            'config' => 'nullable|json',
+            'config' => 'nullable|array',
         ]);
 
         $maxOrder = $question->answers()->max('display_order') ?? 0;
@@ -60,7 +60,7 @@ class AnswerController extends Controller
             'is_correct' => 'sometimes|boolean',
             'media_id' => 'nullable|string|exists:media,file_id',
             'display_order' => 'nullable|integer|min:0',
-            'config' => 'nullable|json',
+            'config' => 'nullable|array',
         ]);
 
         $answer->update($validated);

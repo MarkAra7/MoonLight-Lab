@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1\Quiz;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ImportQuizRequest;
+use App\Http\Resources\QuizResource;
 use App\Models\Answer;
 use App\Models\Question;
 use App\Models\Quiz;
@@ -93,7 +94,9 @@ class AiQuizController extends Controller
                 return $quiz->load(['category', 'media', 'author', 'questions.answers']);
             });
 
-            return response()->json($result, 201);
+            // Return through QuizResource so author-only question fields
+            // (correct_text / match_mode / config) survive JSON serialisation.
+            return (new QuizResource($result))->response()->setStatusCode(201);
         } catch (ValidationException $e) {
             throw $e;
         } catch (\Throwable $e) {
