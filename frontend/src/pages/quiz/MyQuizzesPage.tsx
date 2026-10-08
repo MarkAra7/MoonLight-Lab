@@ -19,6 +19,12 @@ function StatusBadge({ status }: { status?: string | null }) {
   );
 }
 
+const newQuizButtonClasses =
+  "inline-flex items-center gap-2 rounded-xl bg-sky-600 px-5 py-2.5 text-sm font-bold text-white no-underline transition-colors hover:bg-sky-500 dark:bg-sky-400 dark:text-slate-900 dark:hover:bg-sky-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 dark:focus-visible:ring-sky-400 dark:focus-visible:ring-offset-moon-dark";
+
+const editLinkClasses =
+  "rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 no-underline transition-colors hover:border-sky-500/30 hover:bg-sky-500/5 hover:text-sky-600 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300 dark:hover:border-sky-500/30 dark:hover:text-sky-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:focus-visible:ring-sky-400";
+
 export function MyQuizzesPage() {
   const { user, loading } = useAuth();
 
@@ -84,11 +90,19 @@ export function MyQuizzesPage() {
 
   return (
     <div className="flex w-full flex-col">
-      <header className="mb-10">
-        <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">My quizzes</h1>
-        <p className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-400">
-          {meta.total} quiz{meta.total === 1 ? "" : "zes"} created by you.
-        </p>
+      <header className="mb-10 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">My quizzes</h1>
+          <p className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-400">
+            {meta.total} quiz{meta.total === 1 ? "" : "zes"} created by you.
+          </p>
+        </div>
+        <Link to="/quizzes/new" className={newQuizButtonClasses}>
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+          New quiz
+        </Link>
       </header>
 
       {quizzesLoading ? (
@@ -101,17 +115,30 @@ export function MyQuizzesPage() {
         </div>
       ) : quizzes.length === 0 ? (
         <div className="glass-moon w-full p-12 text-center">
-          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+          <p className="mb-5 text-sm font-medium text-slate-500 dark:text-slate-400">
             You haven&apos;t created any quizzes yet.
           </p>
+          <Link to="/quizzes/new" className={newQuizButtonClasses}>
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            Create your first quiz
+          </Link>
         </div>
       ) : (
         <div className="flex flex-col gap-6">
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {quizzes.map((quiz) => (
               <div key={quiz.quiz_id} className="flex flex-col">
-                <div className="mb-2.5 flex justify-end">
+                <div className="mb-2.5 flex items-center justify-between gap-3">
                   <StatusBadge status={quiz.quiz_status?.status} />
+                  <Link
+                    to={`/quizzes/${quiz.quiz_id}/edit`}
+                    className={editLinkClasses}
+                    aria-label={`Edit ${quiz.title}`}
+                  >
+                    Edit
+                  </Link>
                 </div>
                 <div className="flex flex-1">
                   <QuizCard quiz={quiz} showAuthorLink={false} />

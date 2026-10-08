@@ -171,27 +171,16 @@ const ShowQ = () => {
 					</div>
 
 					<div className="flex flex-wrap gap-3">
-						<Button
-							color="info"
-							onClick={() => navigate(`/quizzes/${quiz.quiz_id}/play`)}
-							className="inline-flex items-center gap-2 font-bold"
-						>
-							<svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-								<path d="M8 5.14v14l11-7-11-7z" />
-							</svg>
-							Play Quiz
-						</Button>
-
 						{isOwner && (
 							<Button
-								color="light"
+								color="info"
 								onClick={() => navigate(`/quizzes/${quiz.quiz_id}/edit`)}
-								className="inline-flex items-center gap-2 font-semibold"
+								className="inline-flex items-center gap-2 font-bold"
 							>
 								<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
 									<path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
 								</svg>
-								Edit
+								Edit quiz
 							</Button>
 						)}
 					</div>

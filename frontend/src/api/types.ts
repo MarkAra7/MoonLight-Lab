@@ -58,15 +58,41 @@ export interface Quiz {
   author_id: number;
   author?: QuizAuthor | null;
   category?: Category | null;
+  category_id?: string | null;
   difficulty?: string | null;
+  language?: string | null;
   quiz_status?: { status: string } | null;
   media?: Media | null;
+  media_id?: string | null;
   questions_count?: number | null;
-  questions?: unknown[];
-  time_limit?: number;
+  questions?: Question[];
+  time_limit?: number | null;
   views?: number;
   is_public?: boolean;
   average_score?: number | null;
+}
+
+export interface Answer {
+  answer_id: string;
+  question_id?: string;
+  answer_text?: string | null;
+  display_order?: number;
+  media_id?: string | null;
+  config?: Record<string, unknown> | null;
+  is_correct?: boolean;
+}
+
+export interface Question {
+  question_id: string;
+  question_text: string;
+  question_type: string;
+  media_id?: string | null;
+  display_order?: number;
+  is_private?: boolean;
+  config?: Record<string, unknown> | null;
+  correct_text?: string | null;
+  match_mode?: string | null;
+  answers?: Answer[];
 }
 
 /**

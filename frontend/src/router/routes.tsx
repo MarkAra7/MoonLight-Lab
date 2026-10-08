@@ -8,6 +8,7 @@ import { UserProfilePage } from "@/pages/profile/UserProfilePage";
 import { SearchPage } from "@/pages/search/SearchPage";
 import { MyQuizzesPage } from "@/pages/quiz/MyQuizzesPage";
 import { QuizBrowsePage } from "@/pages/quiz/QuizBrowsePage";
+import { QuizEditorPage } from "@/pages/quiz/QuizEditorPage";
 import ShowQ from "@/pages/quiz/ShowQ";
 import { JoinClassPage } from "@/pages/classes/JoinClassPage";
 import { MyClassesPage } from "@/pages/classes/MyClassesPage";
@@ -31,11 +32,13 @@ export const routes: AppRoute[] = [
   { path: "/my-quizzes", element: <MyQuizzesPage /> },
   { path: "/users/:username", element: <UserProfilePage /> },
   { path: "/quizzes", element: <QuizBrowsePage /> },
+  { path: "/quizzes/new", element: <QuizEditorPage /> },
   { path: "/join/:code", element: <JoinClassPage /> },
   { path: "/my-classes", element: <MyClassesPage /> },
   { path: "/my-classes/:id", element: <MyClassDetailPage /> },
   { path: "/teacher/classes", element: <TeacherClassesPage /> },
   { path: "/teacher/classes/:id", element: <TeacherClassDetailPage /> },
   { path: "/teacher/assignments/:id", element: <TeacherAssignmentResultsPage /> },
+  { path: "/quizzes/:quizId/edit", element: <QuizEditorPage /> },
   { path: "/quizzes/:quizId", element: <ShowQ /> },
 ];

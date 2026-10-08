@@ -1,5 +1,5 @@
 import apiClient from "./client";
-import type { Comment, MyRating, Paged, Quiz, RatingSummary } from "./types";
+import type { Answer, Comment, MyRating, Paged, Question, Quiz, RatingSummary } from "./types";
 
 export interface QuizListParams {
   author?: string;
@@ -14,6 +14,10 @@ export interface QuizPayload {
   description?: string | null;
   category_id?: number | string | null;
   media_id?: number | string | null;
+  language?: string | null;
+  difficulty?: string | null;
+  time_limit?: number | null;
+  status?: string;
   is_public?: boolean;
 }
 
@@ -22,7 +26,7 @@ export interface QuestionPayload {
   question_type: string;
   media_id?: string | null;
   display_order?: number;
-  config?: unknown;
+  config?: Record<string, unknown> | null;
   is_private?: boolean;
 }
 
@@ -31,7 +35,7 @@ export interface AnswerPayload {
   is_correct: boolean;
   media_id?: string | null;
   display_order?: number;
-  config?: unknown;
+  config?: Record<string, unknown> | null;
 }
 
 export interface ReorderPayload {
@@ -98,21 +102,21 @@ export const quizApi = {
   remove: (id: number | string) => apiClient.delete(`/quizzes/${id}`),
   importJson: (payload: unknown) => apiClient.post("/quizzes/import-json", payload),
 
-  questions: (quizId: number | string) => apiClient.get(`/quizzes/${quizId}/questions`),
+  questions: (quizId: number | string) => apiClient.get<Question[]>(`/quizzes/${quizId}/questions`),
   addQuestion: (quizId: number | string, payload: QuestionPayload) =>
-    apiClient.post(`/quizzes/${quizId}/questions`, payload),
+    apiClient.post<Question>(`/quizzes/${quizId}/questions`, payload),
   reorderQuestions: (quizId: number | string, payload: ReorderPayload) =>
     apiClient.put(`/quizzes/${quizId}/questions/reorder`, payload),
-  question: (questionId: number | string) => apiClient.get(`/questions/${questionId}`),
+  question: (questionId: number | string) => apiClient.get<Question>(`/questions/${questionId}`),
   updateQuestion: (questionId: number | string, payload: Partial<QuestionPayload>) =>
-    apiClient.put(`/questions/${questionId}`, payload),
+    apiClient.put<Question>(`/questions/${questionId}`, payload),
   removeQuestion: (questionId: number | string) => apiClient.delete(`/questions/${questionId}`),
 
-  answers: (questionId: number | string) => apiClient.get(`/questions/${questionId}/answers`),
+  answers: (questionId: number | string) => apiClient.get<Answer[]>(`/questions/${questionId}/answers`),
   addAnswer: (questionId: number | string, payload: AnswerPayload) =>
-    apiClient.post(`/questions/${questionId}/answers`, payload),
+    apiClient.post<Answer>(`/questions/${questionId}/answers`, payload),
   updateAnswer: (answerId: number | string, payload: Partial<AnswerPayload>) =>
-    apiClient.put(`/answers/${answerId}`, payload),
+    apiClient.put<Answer>(`/answers/${answerId}`, payload),
   removeAnswer: (answerId: number | string) => apiClient.delete(`/answers/${answerId}`),
 
   rate: (quizId: number | string, payload: RatePayload) => apiClient.post(`/quizzes/${quizId}/ratings`, payload),
