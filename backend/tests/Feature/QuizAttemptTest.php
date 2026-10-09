@@ -217,6 +217,22 @@ class QuizAttemptTest extends TestCase
         ]);
     }
 
+    public function test_takers_see_theory_content_but_not_correct_answers(): void
+    {
+        $this->makeQuestion('theory', ['content' => 'Read this first.']);
+        $this->makeQuestion('text_input', ['correct_text' => 'Daugava', 'match_mode' => 'exact']);
+
+        $response = $this->actingAs($this->student, 'sanctum')
+            ->getJson("/api/v1/quizzes/{$this->quiz->quiz_id}/questions");
+
+        $response->assertStatus(200)
+            ->assertJsonPath('0.theory_content', 'Read this first.')
+            ->assertJsonPath('1.theory_content', null);
+
+        $this->assertArrayNotHasKey('correct_text', $response->json('1'));
+        $this->assertArrayNotHasKey('config', $response->json('1'));
+    }
+
     private function makeQuestion(string $type, array $config = []): Question
     {
         return Question::create([

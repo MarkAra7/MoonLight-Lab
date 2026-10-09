@@ -32,6 +32,8 @@ class QuestionResource extends JsonResource
             'correct_text' => $this->when($isAuthor, $this->correct_text),
             'match_mode' => $this->when($isAuthor, $this->match_mode),
             'created_at' => $this->when($isAuthor, $this->created_at),
+            // Reading material for theory questions is not an answer, so takers see it too.
+            'theory_content' => $this->question_type === 'theory' ? ($this->config['content'] ?? null) : null,
             'media' => $this->whenLoaded('media', fn () => new MediaResource($this->media)),
             'answers' => $this->whenLoaded('answers', fn () => $this->answers->map(
                 fn ($answer) => (new AnswerResource($answer))->setAuthor($isAuthor)
