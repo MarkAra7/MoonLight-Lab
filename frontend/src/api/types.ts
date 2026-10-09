@@ -95,6 +95,37 @@ export interface Question {
   answers?: Answer[];
 }
 
+/** The correct option(s) for a question, revealed only after an attempt. */
+export interface QuizAttemptReviewAnswer {
+  answer_id: string;
+  answer_text: string;
+}
+
+export interface QuizAttemptReviewQuestion {
+  question_id: string;
+  question_text: string;
+  question_type: string;
+  /** null for theory questions, which award no points. */
+  is_correct: boolean | null;
+  given_answer_ids: string[];
+  given_text: string;
+  correct_answers: QuizAttemptReviewAnswer[];
+  correct_text: string | null;
+}
+
+export interface QuizAttemptResult {
+  attempt_id: number;
+  quiz_id: string;
+  quiz_title: string;
+  score: number;
+  total: number;
+  percentage: number;
+  attempt_number: number;
+  started_at?: string | null;
+  completed_at?: string | null;
+  questions: QuizAttemptReviewQuestion[];
+}
+
 /**
  * Laravel resource-collection pagination envelope.
  *

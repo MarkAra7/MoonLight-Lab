@@ -1,5 +1,14 @@
 import apiClient from "./client";
-import type { Answer, Comment, MyRating, Paged, Question, Quiz, RatingSummary } from "./types";
+import type {
+  Answer,
+  Comment,
+  MyRating,
+  Paged,
+  Question,
+  Quiz,
+  QuizAttemptResult,
+  RatingSummary,
+} from "./types";
 
 export interface QuizListParams {
   author?: string;
@@ -40,6 +49,19 @@ export interface AnswerPayload {
 
 export interface ReorderPayload {
   questions: { question_id: string; display_order: number }[];
+}
+
+export interface AttemptAnswerPayload {
+  question_id: string;
+  answer_id?: string | null;
+  answer_ids?: string[];
+  text?: string | null;
+}
+
+export interface SubmitAttemptAnswersPayload {
+  assignment_id?: string | null;
+  started_at?: string | null;
+  answers: AttemptAnswerPayload[];
 }
 
 export interface RatePayload {
@@ -118,6 +140,9 @@ export const quizApi = {
   updateAnswer: (answerId: number | string, payload: Partial<AnswerPayload>) =>
     apiClient.put<Answer>(`/answers/${answerId}`, payload),
   removeAnswer: (answerId: number | string) => apiClient.delete(`/answers/${answerId}`),
+
+  submitAttempt: (quizId: number | string, payload: SubmitAttemptAnswersPayload) =>
+    apiClient.post<QuizAttemptResult>(`/quizzes/${quizId}/attempts`, payload),
 
   rate: (quizId: number | string, payload: RatePayload) => apiClient.post(`/quizzes/${quizId}/ratings`, payload),
   myRating: (quizId: number | string) => apiClient.get<MyRating>(`/quizzes/${quizId}/my-rating`),
