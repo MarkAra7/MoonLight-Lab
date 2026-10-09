@@ -5,6 +5,7 @@ import { getErrorMessage } from "@/api";
 import { quizApi } from "@/api/quiz";
 import { useAuth } from "@/context/AuthContext";
 import { QuizQuestionTake, type TakeAnswer } from "@/components/quiz/QuizQuestionTake";
+import { QuizResultReview } from "@/components/quiz/QuizResultReview";
 import { questionTypeMeta } from "@/config/questionTypes";
 import type { Question, Quiz, QuizAttemptResult } from "@/api/types";
 
@@ -197,6 +198,8 @@ export function QuizPlayPage() {
             </Link>
           </div>
         </section>
+
+        <QuizResultReview result={result} questions={questions} />
       </div>
     );
   }
