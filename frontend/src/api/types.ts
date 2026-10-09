@@ -92,6 +92,8 @@ export interface Question {
   config?: Record<string, unknown> | null;
   correct_text?: string | null;
   match_mode?: string | null;
+  /** Public reading material for theory questions. */
+  theory_content?: string | null;
   answers?: Answer[];
 }
 
