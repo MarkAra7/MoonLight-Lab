@@ -9,6 +9,7 @@ import { SearchPage } from "@/pages/search/SearchPage";
 import { MyQuizzesPage } from "@/pages/quiz/MyQuizzesPage";
 import { QuizBrowsePage } from "@/pages/quiz/QuizBrowsePage";
 import { QuizEditorPage } from "@/pages/quiz/QuizEditorPage";
+import { QuizPlayPage } from "@/pages/quiz/QuizPlayPage";
 import ShowQ from "@/pages/quiz/ShowQ";
 import { JoinClassPage } from "@/pages/classes/JoinClassPage";
 import { MyClassesPage } from "@/pages/classes/MyClassesPage";
@@ -40,5 +41,6 @@ export const routes: AppRoute[] = [
   { path: "/teacher/classes/:id", element: <TeacherClassDetailPage /> },
   { path: "/teacher/assignments/:id", element: <TeacherAssignmentResultsPage /> },
   { path: "/quizzes/:quizId/edit", element: <QuizEditorPage /> },
+  { path: "/quizzes/:quizId/play", element: <QuizPlayPage /> },
   { path: "/quizzes/:quizId", element: <ShowQ /> },
 ];
