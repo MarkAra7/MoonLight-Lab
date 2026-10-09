@@ -84,6 +84,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/classes/join', [StudentClassController::class, 'join'])->middleware('throttle:6,1');
         Route::get('/my-attempts', [QuizAttemptController::class, 'myAttempts']);
         Route::post('/quiz-attempts', [QuizAttemptController::class, 'store']);
+        Route::post('/quizzes/{quiz}/attempts', [QuizAttemptController::class, 'grade']);
 
         Route::get('/quizzes/{quiz}/my-rating', [QuizRatingController::class, 'userRating']);
         Route::post('/quizzes/{quiz}/ratings', [QuizRatingController::class, 'store']);
