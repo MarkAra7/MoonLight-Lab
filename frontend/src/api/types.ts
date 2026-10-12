@@ -128,6 +128,82 @@ export interface QuizAttemptResult {
   questions: QuizAttemptReviewQuestion[];
 }
 
+export interface Party {
+  id: string;
+  party_code: string;
+  host_id: number;
+  quiz_id: string;
+  status: string;
+  current_question_index?: number;
+  question_seconds: number;
+  max_players: number;
+  settings?: { allow_guests?: boolean } | null;
+}
+
+export interface PartyPlayer {
+  id: number;
+  party_id?: string;
+  user_id?: number | null;
+  nickname: string;
+  score: number;
+  correct: number;
+  total: number;
+  rank?: number | null;
+  player_token?: string;
+}
+
+export interface PartyStanding {
+  id?: number;
+  nickname: string;
+  score: number;
+  correct: number;
+  total: number;
+  rank?: number | null;
+}
+
+export interface PartyQuestion {
+  question_text: string;
+  question_type: string;
+  answers: { answer_id: string; answer_text?: string | null }[];
+}
+
+/** The signed-in (or guest) player as the party state endpoint reports them. */
+export interface PartyStatePlayer extends PartyPlayer {
+  is_host: boolean;
+  is_registered: boolean;
+  player_token: string;
+}
+
+export interface PartyState {
+  party: {
+    id: string;
+    party_code: string;
+    status: string;
+    allow_guests: boolean;
+    question_seconds: number;
+    max_players: number;
+    host_nickname?: string | null;
+    host_id: number;
+    quiz_title?: string | null;
+  };
+  player: PartyStatePlayer | null;
+  phase: string;
+  question_index: number;
+  total_questions: number;
+  question: PartyQuestion | null;
+  question_end_at: string | null;
+  answered_count: number;
+  players_count: number;
+  standings: PartyStanding[];
+}
+
+export interface PartyResults {
+  party: Party;
+  standings: PartyStanding[];
+  my_rank: number | null;
+  my_score: number | null;
+}
+
 /**
  * Laravel resource-collection pagination envelope.
  *
