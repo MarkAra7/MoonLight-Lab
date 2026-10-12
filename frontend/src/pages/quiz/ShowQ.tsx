@@ -1,8 +1,9 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { Badge, Button, Spinner } from "flowbite-react";
+import { Badge, Button, Spinner, Alert } from "flowbite-react";
 import { quizApi } from "@/api/quiz";
 import { getErrorMessage } from "@/api";
+import { partyApi, partyTokenStore } from "@/api/party";
 import { useAuth } from "@/context/AuthContext";
 import { mediaUrl, truncate, formatDate } from "@/utils/helpers";
 import type { Comment, Quiz } from "@/api/types";
@@ -23,6 +24,9 @@ const ShowQ = () => {
 	const [comments, setComments] = useState<Comment[]>([]);
 	const [commentBody, setCommentBody] = useState("");
 	const [posting, setPosting] = useState(false);
+
+	const [hosting, setHosting] = useState(false);
+	const [hostError, setHostError] = useState("");
 
 	const isOwner = !!user && quiz?.author_id === user.id;
 
@@ -91,6 +95,20 @@ const ShowQ = () => {
 			setComments((prev) => prev.filter((c) => c.id !== commentId));
 		} catch (err) {
 			console.error("Failed to delete comment:", err);
+		}
+	};
+
+	const hostLiveGame = async () => {
+		if (!quiz || hosting) return;
+		setHosting(true);
+		setHostError("");
+		try {
+			const { data } = await partyApi.create({ quiz_id: String(quiz.quiz_id) });
+			partyTokenStore.set(data.party.party_code, data.player_token);
+			navigate(`/parties/${data.party.party_code}`);
+		} catch (err) {
+			setHostError(getErrorMessage(err, "Could not start a live game."));
+			setHosting(false);
 		}
 	};
 
@@ -182,6 +200,29 @@ const ShowQ = () => {
 							Play quiz
 						</Button>
 
+						{user && (
+							<Button
+								color="light"
+								onClick={() => void hostLiveGame()}
+								disabled={hosting}
+								className="inline-flex items-center gap-2 font-semibold"
+							>
+								{hosting ? (
+									<>
+										<Spinner size="sm" />
+										Starting…
+									</>
+								) : (
+									<>
+										<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+											<path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
+										</svg>
+										Host live game
+									</>
+								)}
+							</Button>
+						)}
+
 						{isOwner && (
 							<Button
 								color="light"
@@ -195,6 +236,12 @@ const ShowQ = () => {
 							</Button>
 						)}
 					</div>
+
+					{hostError && (
+						<Alert color="failure" className="mt-4">
+							{hostError}
+						</Alert>
+					)}
 				</div>
 			</div>
 
