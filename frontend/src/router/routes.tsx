@@ -12,6 +12,7 @@ import { QuizEditorPage } from "@/pages/quiz/QuizEditorPage";
 import { QuizPlayPage } from "@/pages/quiz/QuizPlayPage";
 import ShowQ from "@/pages/quiz/ShowQ";
 import { JoinPartyPage } from "@/pages/party/JoinPartyPage";
+import { PartyRoomPage } from "@/pages/party/PartyRoomPage";
 import { JoinClassPage } from "@/pages/classes/JoinClassPage";
 import { MyClassesPage } from "@/pages/classes/MyClassesPage";
 import { MyClassDetailPage } from "@/pages/classes/MyClassDetailPage";
@@ -35,6 +36,7 @@ export const routes: AppRoute[] = [
   { path: "/users/:username", element: <UserProfilePage /> },
   { path: "/quizzes", element: <QuizBrowsePage /> },
   { path: "/parties/join", element: <JoinPartyPage /> },
+  { path: "/parties/:partyCode", element: <PartyRoomPage /> },
   { path: "/quizzes/new", element: <QuizEditorPage /> },
   { path: "/join/:code", element: <JoinClassPage /> },
   { path: "/my-classes", element: <MyClassesPage /> },
