@@ -95,6 +95,10 @@ export function AppLayout() {
               Home
             </NavLink>
 
+            <NavLink to="/parties/join" className={navLinkClass}>
+              Join game
+            </NavLink>
+
             {user?.role?.title === "student" && (
               <NavLink to="/my-classes" className={navLinkClass}>
                 My Classes
