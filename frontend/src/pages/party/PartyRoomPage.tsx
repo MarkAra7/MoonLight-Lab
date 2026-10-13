@@ -9,7 +9,7 @@ import {
   PartyLiveQuestion,
   type PartyAnswerFeedback,
 } from "@/components/party/PartyLiveQuestion";
-import type { PartyState, PartyStanding } from "@/api/types";
+import type { PartyResults, PartyState, PartyStanding } from "@/api/types";
 
 const primaryButtonClasses =
   "bg-sky-600 enabled:hover:bg-sky-500 dark:bg-sky-400 dark:text-slate-900 dark:enabled:hover:bg-sky-300";
@@ -103,6 +103,7 @@ export function PartyRoomPage() {
   const [feedback, setFeedback] = useState<PartyAnswerFeedback | null>(null);
   const [answerError, setAnswerError] = useState<string | null>(null);
   const [answerQuestionKey, setAnswerQuestionKey] = useState<string | null>(null);
+  const [results, setResults] = useState<PartyResults | null>(null);
 
   const autoAdvancedFor = useRef<number | null>(null);
 
@@ -194,6 +195,27 @@ export function PartyRoomPage() {
     autoAdvancedFor.current = questionIndex;
     void advance();
   }, [phase, isHost, expired, questionIndex, advance]);
+
+  useEffect(() => {
+    if (phase !== "results" || !code) return;
+
+    let active = true;
+
+    (async () => {
+      try {
+        const { data } = await partyApi.results(code);
+        if (active) setResults(data);
+      } catch (err) {
+        if (active) {
+          setActionError(getErrorMessage(err, "Could not load the final results."));
+        }
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [phase, code]);
 
   const handleStart = async () => {
     setStarting(true);
@@ -469,16 +491,39 @@ export function PartyRoomPage() {
           <h2 className="mb-4 text-sm font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
             {phase === "results" ? "Final standings" : "Game ended"}
           </h2>
+
+          {phase === "results" && results?.my_rank != null && (
+            <p className="mb-5 rounded-xl bg-sky-50 px-4 py-3 text-sm font-bold text-sky-700 dark:bg-sky-400/10 dark:text-sky-300">
+              You finished #{results.my_rank} with {results.my_score ?? 0} points.
+            </p>
+          )}
+
           {phase === "cancelled" && (
             <p className="mb-4 text-sm font-medium text-slate-500 dark:text-slate-400">
               This game was cancelled by the host.
             </p>
           )}
+
           <PartyLeaderboard
-            standings={standings}
+            standings={results?.standings ?? standings}
             highlightId={player?.id}
+            highlightNickname={player?.nickname}
             showRanks={phase === "results"}
           />
+
+          <div className="mt-6 flex flex-wrap gap-3">
+            {results?.party.quiz_id && (
+              <Link
+                to={`/quizzes/${results.party.quiz_id}`}
+                className="inline-flex items-center justify-center rounded-xl bg-sky-600 px-6 py-3 text-sm font-bold text-white no-underline transition-colors hover:bg-sky-500 dark:bg-sky-400 dark:text-slate-900 dark:hover:bg-sky-300"
+              >
+                Back to quiz
+              </Link>
+            )}
+            <Link to="/quizzes" className={`${secondaryButtonClasses} inline-flex items-center justify-center rounded-xl px-6 py-3 text-sm font-bold no-underline`}>
+              Browse quizzes
+            </Link>
+          </div>
         </section>
       )}
     </div>
