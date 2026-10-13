@@ -46,6 +46,13 @@ export interface PartyCreateResult {
   player_token: string;
 }
 
+export interface PartyAnswerResult {
+  message: string;
+  is_correct: boolean;
+  points: number;
+  correct_answer_id: string | null;
+}
+
 /** Every party request a guest makes identifies itself with the player token. */
 function playerHeader(partyCode: string): Record<string, string> {
   const token = partyTokenStore.get(partyCode);
@@ -59,7 +66,7 @@ export const partyApi = {
       headers: playerHeader(partyCode),
     }),
   answer: (partyCode: string, payload: PartyAnswerPayload) =>
-    apiClient.post(`/parties/${partyCode}/answer`, payload, {
+    apiClient.post<PartyAnswerResult>(`/parties/${partyCode}/answer`, payload, {
       headers: playerHeader(partyCode),
     }),
   results: (partyCode: string) =>
