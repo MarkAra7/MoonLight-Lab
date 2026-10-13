@@ -4,6 +4,7 @@ import { Alert, Badge, Button, Spinner } from "flowbite-react";
 import { getErrorMessage } from "@/api";
 import { partyApi, partyTokenStore } from "@/api/party";
 import { useAuth } from "@/context/AuthContext";
+import { PartyLeaderboard } from "@/components/party/PartyLeaderboard";
 import type { PartyState, PartyStanding } from "@/api/types";
 
 const primaryButtonClasses =
@@ -330,27 +331,11 @@ export function PartyRoomPage() {
               The live question screen is on its way — this lobby will hand over to it shortly.
             </p>
           )}
-          <ol className="flex flex-col gap-2">
-            {standings.map((entry, index) => (
-              <li
-                key={entry.id ?? `${entry.nickname}-${index}`}
-                className="flex items-center gap-3 rounded-xl bg-slate-50 px-4 py-3 dark:bg-white/[0.03]"
-              >
-                <span className="w-6 text-sm font-black text-slate-400 dark:text-slate-500">
-                  {entry.rank ?? index + 1}
-                </span>
-                <span className="min-w-0 flex-1 truncate text-sm font-bold text-slate-800 dark:text-slate-100">
-                  {entry.nickname}
-                </span>
-                <span className="text-sm font-bold text-sky-600 dark:text-sky-400">
-                  {entry.score}
-                </span>
-                <span className="text-xs font-semibold text-slate-400 dark:text-slate-500">
-                  {entry.correct}/{entry.total}
-                </span>
-              </li>
-            ))}
-          </ol>
+          <PartyLeaderboard
+            standings={standings}
+            highlightId={player?.id}
+            showRanks={phase === "results"}
+          />
         </section>
       )}
     </div>
