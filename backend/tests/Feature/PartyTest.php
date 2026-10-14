@@ -226,6 +226,30 @@ class PartyTest extends TestCase
         $this->assertSame(2, $hostStanding['rank']);
     }
 
+    public function test_wrong_answer_reports_the_correct_answer_id(): void
+    {
+        [$party, $guestToken] = $this->joinedPartyPayload();
+        $partyId = $party['party']['party_code'];
+
+        $this->actingAs($this->host, 'sanctum')->postJson('/api/v1/parties/'.$partyId.'/start')->assertOk();
+
+        $state = $this->getJson('/api/v1/parties/'.$partyId.'/state')->json();
+        $correctAnswerId = $state['question']['answers'][0]['answer_id'];
+        $wrongAnswerId = $state['question']['answers'][1]['answer_id'];
+
+        $response = $this->withHeader('X-Player-Token', $guestToken)
+            ->postJson('/api/v1/parties/'.$partyId.'/answer', [
+                'answer_id' => $wrongAnswerId,
+                'answered_at_ms' => 500,
+            ])
+            ->assertOk()
+            ->json();
+
+        $this->assertFalse($response['is_correct']);
+        $this->assertSame(0, $response['points']);
+        $this->assertSame($correctAnswerId, $response['correct_answer_id']);
+    }
+
     public function test_anticheat_rejects_out_of_window_answers(): void
     {
         [$party, $guestToken] = $this->joinedPartyPayload();

@@ -257,11 +257,13 @@ class PartyController extends Controller
         }
         $player->increment('total_time_ms', max(0, $data['answered_at_ms']));
 
+        $correctAnswerId = $question->answers()->where('is_correct', true)->value('answer_id');
+
         return response()->json([
             'message' => $answer->is_correct ? 'Correct!' : 'Wrong!',
             'is_correct' => (bool) $answer->is_correct,
             'points' => $points,
-            'correct_answer_id' => $answer->is_correct ? null : $answer->answer_id,
+            'correct_answer_id' => $correctAnswerId,
         ]);
     }
 
