@@ -12,6 +12,7 @@ export interface PartyLiveQuestionProps {
   secondsLeft: number;
   totalSeconds: number;
   selectedAnswerId: string | null;
+  correctAnswerId?: string | null;
   feedback: PartyAnswerFeedback | null;
   locked: boolean;
   submitting: boolean;
@@ -26,6 +27,7 @@ export function PartyLiveQuestion({
   secondsLeft,
   totalSeconds,
   selectedAnswerId,
+  correctAnswerId,
   feedback,
   locked,
   submitting,
@@ -78,6 +80,8 @@ export function PartyLiveQuestion({
         <ul className="mt-6 grid gap-3 sm:grid-cols-2">
           {options.map((option) => {
             const selected = selectedAnswerId === option.answer_id;
+            const isCorrectOption =
+              locked && correctAnswerId != null && option.answer_id === correctAnswerId;
 
             return (
               <li key={option.answer_id}>
@@ -86,14 +90,22 @@ export function PartyLiveQuestion({
                   disabled={disabled}
                   onClick={() => onSelect(option.answer_id)}
                   className={`flex w-full items-center gap-3 rounded-xl border px-4 py-4 text-left text-sm font-bold transition-colors ${
-                    selected
-                      ? "border-sky-500 bg-sky-50 text-sky-700 dark:border-sky-400 dark:bg-sky-400/10 dark:text-sky-300"
-                      : "border-slate-200 bg-white text-slate-700 enabled:hover:border-sky-500/40 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-200 dark:enabled:hover:border-sky-500/40"
-                  } ${disabled && !selected ? "opacity-60" : ""}`}
+                    isCorrectOption
+                      ? "border-emerald-500 bg-emerald-50 text-emerald-700 dark:border-emerald-400 dark:bg-emerald-400/10 dark:text-emerald-300"
+                      : selected
+                        ? "border-sky-500 bg-sky-50 text-sky-700 dark:border-sky-400 dark:bg-sky-400/10 dark:text-sky-300"
+                        : "border-slate-200 bg-white text-slate-700 enabled:hover:border-sky-500/40 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-200 dark:enabled:hover:border-sky-500/40"
+                  } ${disabled && !selected && !isCorrectOption ? "opacity-60" : ""}`}
                 >
                   <span className="min-w-0 flex-1">{option.answer_text}</span>
-                  {selected && (
-                    <span className="text-[11px] font-black uppercase tracking-wide">Picked</span>
+                  {isCorrectOption ? (
+                    <span className="text-[11px] font-black uppercase tracking-wide text-emerald-600 dark:text-emerald-300">
+                      Correct
+                    </span>
+                  ) : (
+                    selected && (
+                      <span className="text-[11px] font-black uppercase tracking-wide">Picked</span>
+                    )
                   )}
                 </button>
               </li>

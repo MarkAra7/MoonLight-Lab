@@ -99,6 +99,7 @@ export function PartyRoomPage() {
 
   const [now, setNow] = useState(() => Date.now());
   const [selectedAnswerId, setSelectedAnswerId] = useState<string | null>(null);
+  const [correctAnswerId, setCorrectAnswerId] = useState<string | null>(null);
   const [answerStatus, setAnswerStatus] = useState<AnswerStatus>("idle");
   const [feedback, setFeedback] = useState<PartyAnswerFeedback | null>(null);
   const [answerError, setAnswerError] = useState<string | null>(null);
@@ -124,6 +125,7 @@ export function PartyRoomPage() {
   if (answerQuestionKey !== questionKey) {
     setAnswerQuestionKey(questionKey);
     setSelectedAnswerId(null);
+    setCorrectAnswerId(null);
     setAnswerStatus("idle");
     setFeedback(null);
     setAnswerError(null);
@@ -259,6 +261,7 @@ export function PartyRoomPage() {
       });
 
       setFeedback({ isCorrect: Boolean(data.is_correct), points: data.points ?? 0 });
+      setCorrectAnswerId(data.correct_answer_id ?? null);
       setAnswerStatus("answered");
     } catch (err) {
       setSelectedAnswerId(null);
@@ -442,6 +445,7 @@ export function PartyRoomPage() {
               secondsLeft={secondsLeft}
               totalSeconds={totalSeconds}
               selectedAnswerId={selectedAnswerId}
+              correctAnswerId={correctAnswerId}
               feedback={feedback}
               locked={answerStatus === "answered"}
               submitting={answerStatus === "sending"}
