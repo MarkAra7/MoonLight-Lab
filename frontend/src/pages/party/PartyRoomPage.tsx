@@ -119,6 +119,8 @@ export function PartyRoomPage() {
   const remainingMs = endMs !== null ? Math.max(0, endMs - now) : 0;
   const secondsLeft = endMs !== null ? Math.ceil(remainingMs / 1000) : totalSeconds;
   const expired = endMs !== null && remainingMs <= 0;
+  // Nothing changes once the game is over, so stop the polls and the ticker.
+  const polling = phase !== "results" && phase !== "cancelled";
 
   // Drop the local answer state as soon as the question or phase changes.
   const questionKey = `${phase}:${questionIndex}`;
@@ -144,7 +146,7 @@ export function PartyRoomPage() {
   }, [code]);
 
   useEffect(() => {
-    if (!code) return;
+    if (!code || !polling) return;
 
     let active = true;
 
@@ -169,12 +171,14 @@ export function PartyRoomPage() {
       active = false;
       window.clearInterval(timer);
     };
-  }, [code]);
+  }, [code, polling]);
 
   useEffect(() => {
+    if (!polling) return;
+
     const timer = window.setInterval(() => setNow(Date.now()), 500);
     return () => window.clearInterval(timer);
-  }, []);
+  }, [polling]);
 
   const advance = useCallback(async () => {
     setAdvancing(true);
