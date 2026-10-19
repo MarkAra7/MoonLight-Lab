@@ -79,5 +79,8 @@ export const partyApi = {
   next: (partyCode: string) => apiClient.post(`/parties/${partyCode}/next`),
   kick: (partyCode: string, playerId: number | string) =>
     apiClient.delete(`/parties/${partyCode}/players/${playerId}`),
-  leave: (partyCode: string) => apiClient.delete(`/parties/${partyCode}/leave`),
+  leave: (partyCode: string) =>
+    apiClient.delete(`/parties/${partyCode}/leave`, {
+      headers: playerHeader(partyCode),
+    }),
 };
