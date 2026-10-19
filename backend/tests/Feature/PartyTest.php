@@ -275,6 +275,21 @@ class PartyTest extends TestCase
             ->assertStatus(422);
     }
 
+    public function test_guest_with_token_can_leave_party(): void
+    {
+        [$party, $guestToken] = $this->joinedPartyPayload();
+        $partyId = $party['party']['party_code'];
+
+        $this->app['auth']->forgetGuards();
+
+        $this->withHeader('X-Player-Token', $guestToken)
+            ->deleteJson('/api/v1/parties/'.$partyId.'/leave')
+            ->assertOk();
+
+        $state = $this->getJson('/api/v1/parties/'.$partyId.'/state')->assertOk()->json();
+        $this->assertCount(1, $state['standings']);
+    }
+
     public function test_host_can_kick_player_and_player_can_leave(): void
     {
         [$party, $guestToken] = $this->joinedPartyPayload();

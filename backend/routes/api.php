@@ -104,13 +104,13 @@ Route::prefix('v1')->group(function () {
     Route::get('/parties/{party:party_code}/state', [PartyController::class, 'state']);
     Route::post('/parties/{party:party_code}/answer', [PartyController::class, 'answer'])->middleware('throttle:30,1');
     Route::get('/parties/{party:party_code}/results', [PartyController::class, 'results']);
+    Route::delete('/parties/{party:party_code}/leave', [PartyController::class, 'leave'])->middleware('optional.sanctum');
 
     Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('/parties', [PartyController::class, 'store']);
         Route::post('/parties/{party:party_code}/start', [PartyController::class, 'start']);
         Route::post('/parties/{party:party_code}/next', [PartyController::class, 'next']);
         Route::delete('/parties/{party:party_code}/players/{player}', [PartyController::class, 'kick']);
-        Route::delete('/parties/{party:party_code}/leave', [PartyController::class, 'leave']);
     });
 
     Route::middleware(['auth:sanctum', 'admin'])->group(function () {
