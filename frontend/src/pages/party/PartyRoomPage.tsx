@@ -318,7 +318,9 @@ export function PartyRoomPage() {
   if (!state) return <SpinnerBlock />;
 
   const { party } = state;
-  const needsJoin = !player;
+  const joinable = phase === "lobby";
+  const needsJoin = !player && joinable;
+  const removed = !player && !joinable;
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
@@ -360,6 +362,40 @@ export function PartyRoomPage() {
           >
             Join with code {code}
           </Link>
+        </section>
+      ) : removed ? (
+        <section className="glass-moon p-8 text-center">
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+            {phase === "cancelled" ? "This game was cancelled" : "You are not in this game"}
+          </h2>
+          <p className="mx-auto mt-2 mb-6 max-w-md text-sm font-medium text-slate-500 dark:text-slate-400">
+            {phase === "cancelled"
+              ? "The host ended the game, so this room is closed."
+              : phase === "results"
+                ? "The game has finished, but you can still see the final standings."
+                : "You are not taking part in this game. Join another one to play."}
+          </p>
+
+          {phase === "results" && (
+            <div className="mb-6 text-left">
+              <PartyLeaderboard standings={results?.standings ?? standings} showRanks />
+            </div>
+          )}
+
+          <div className="flex flex-wrap justify-center gap-3">
+            <Link
+              to="/parties/join"
+              className="inline-flex items-center justify-center rounded-xl bg-sky-600 px-6 py-3 text-sm font-bold text-white no-underline transition-colors hover:bg-sky-500 dark:bg-sky-400 dark:text-slate-900 dark:hover:bg-sky-300"
+            >
+              Join another game
+            </Link>
+            <Link
+              to="/quizzes"
+              className={`${secondaryButtonClasses} inline-flex items-center justify-center rounded-xl px-6 py-3 text-sm font-bold no-underline`}
+            >
+              Browse quizzes
+            </Link>
+          </div>
         </section>
       ) : phase === "lobby" ? (
         <>
