@@ -53,6 +53,29 @@ class AuthTest extends TestCase
             ->assertJsonStructure(['token']);
     }
 
+    public function test_login_is_rate_limited_after_repeated_failures(): void
+    {
+        $user = User::factory()->create([
+            'password' => bcrypt('password'),
+        ]);
+
+        for ($attempt = 1; $attempt <= 5; $attempt++) {
+            $this->postJson('/api/v1/login', [
+                'login' => $user->email,
+                'password' => 'wrong-password',
+                'device_name' => 'test-device',
+            ])->assertStatus(422);
+        }
+
+        // Even the right password is refused once the account is locked out.
+        $this->postJson('/api/v1/login', [
+            'login' => $user->email,
+            'password' => 'password',
+            'device_name' => 'test-device',
+        ])->assertStatus(429)
+            ->assertHeader('Retry-After');
+    }
+
     public function test_user_can_logout()
     {
         $user = User::factory()->create();

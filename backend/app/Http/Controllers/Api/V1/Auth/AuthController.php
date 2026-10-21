@@ -13,6 +13,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -88,21 +90,48 @@ class AuthController extends Controller
 
     public function login(LoginRequest $request)
     {
+        $throttleKey = 'login:'.Str::lower((string) $request->input('login')).'|'.$request->ip();
+        $ipKey = 'login-ip:'.$request->ip();
+
+        // Five tries per account and address, plus a looser cap per address so
+        // credential stuffing across many accounts is slowed down without
+        // locking out a whole school that shares one network.
+        $this->ensureIsNotRateLimited($throttleKey, 5);
+        $this->ensureIsNotRateLimited($ipKey, 30);
+
         $user = User::where('email', $request->login)
             ->orWhere('username', $request->login)
             ->first();
 
         if (! $user || ! Hash::check($request->password, $user->password)) {
+            RateLimiter::hit($throttleKey, 60);
+            RateLimiter::hit($ipKey, 60);
+
             throw ValidationException::withMessages([
                 'login' => ['The provided credentials are incorrect.'],
             ]);
         }
+
+        RateLimiter::clear($throttleKey);
 
         $user->load('role');
 
         return response()->json([
             'user' => $user,
             'token' => $user->createToken($request->device_name)->plainTextToken,
+        ]);
+    }
+
+    private function ensureIsNotRateLimited(string $key, int $maxAttempts): void
+    {
+        if (! RateLimiter::tooManyAttempts($key, $maxAttempts)) {
+            return;
+        }
+
+        $seconds = RateLimiter::availableIn($key);
+
+        abort(429, "Too many login attempts. Please try again in {$seconds} seconds.", [
+            'Retry-After' => $seconds,
         ]);
     }
 
