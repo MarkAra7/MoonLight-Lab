@@ -28,7 +28,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/categories', [CategoryController::class, 'index']);
     Route::get('/categories/{category}', [CategoryController::class, 'show']);
 
-    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,1');
     Route::post('/login', [AuthController::class, 'login']);
     Route::get('/users/profile/{username}', [UserController::class, 'publicProfile'])->middleware('optional.sanctum');
     Route::get('/users/search', [UserController::class, 'search'])->middleware('optional.sanctum');

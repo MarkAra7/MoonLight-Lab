@@ -88,6 +88,31 @@ class AuthTest extends TestCase
         $this->assertSame($known->json(), $unknown->json());
     }
 
+    public function test_registration_is_rate_limited(): void
+    {
+        for ($index = 1; $index <= 10; $index++) {
+            $this->postJson('/api/v1/register', [
+                'first_name' => 'Test',
+                'last_name' => 'User',
+                'username' => 'testuser'.$index,
+                'email' => 'test'.$index.'@example.com',
+                'password' => 'password',
+                'password_confirmation' => 'password',
+                'role' => 'student',
+            ])->assertStatus(201);
+        }
+
+        $this->postJson('/api/v1/register', [
+            'first_name' => 'Test',
+            'last_name' => 'User',
+            'username' => 'testuser11',
+            'email' => 'test11@example.com',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+            'role' => 'student',
+        ])->assertStatus(429);
+    }
+
     public function test_user_can_logout()
     {
         $user = User::factory()->create();
