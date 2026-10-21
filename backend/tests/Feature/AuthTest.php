@@ -76,6 +76,18 @@ class AuthTest extends TestCase
             ->assertHeader('Retry-After');
     }
 
+    public function test_password_reset_does_not_reveal_whether_an_email_exists(): void
+    {
+        $user = User::factory()->create();
+
+        $known = $this->postJson('/api/v1/forgot-password', ['email' => $user->email]);
+        $unknown = $this->postJson('/api/v1/forgot-password', ['email' => 'nobody@example.com']);
+
+        $known->assertOk();
+        $unknown->assertOk();
+        $this->assertSame($known->json(), $unknown->json());
+    }
+
     public function test_user_can_logout()
     {
         $user = User::factory()->create();
