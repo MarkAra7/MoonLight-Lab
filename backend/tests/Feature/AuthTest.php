@@ -113,6 +113,30 @@ class AuthTest extends TestCase
         ])->assertStatus(429);
     }
 
+    public function test_public_registration_cannot_create_a_teacher(): void
+    {
+        $response = $this->postJson('/api/v1/register', [
+            'first_name' => 'Fake',
+            'last_name' => 'Teacher',
+            'username' => 'faketeacher',
+            'email' => 'fake.teacher@example.com',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+            'role' => 'teacher',
+        ]);
+
+        $response->assertStatus(422)->assertJsonValidationErrors('role');
+        $this->assertDatabaseMissing('users', ['email' => 'fake.teacher@example.com']);
+    }
+
+    public function test_role_list_only_offers_registerable_roles(): void
+    {
+        $titles = collect($this->getJson('/api/v1/roles')->assertOk()->json())
+            ->pluck('title');
+
+        $this->assertEqualsCanonicalizing(['student', 'individual'], $titles->all());
+    }
+
     public function test_user_can_logout()
     {
         $user = User::factory()->create();

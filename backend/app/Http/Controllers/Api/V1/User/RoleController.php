@@ -9,6 +9,8 @@ class RoleController extends Controller
 {
     public function index()
     {
-        return Role::whereNotIn('title', [Role::ADMIN])->get(['id', 'title', 'description']);
+        // Only roles the public sign-up form may offer. Teacher accounts are
+        // created by an admin, so they must not appear here.
+        return Role::whereIn('title', Role::REGISTERABLE)->get(['id', 'title', 'description']);
     }
 }

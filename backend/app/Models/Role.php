@@ -15,6 +15,12 @@ class Role extends Model
     public const STUDENT = 'student';
     public const INDIVIDUAL = 'individual';
 
+    /**
+     * Roles anyone may pick on the public sign-up form. Teacher accounts
+     * grant access to class rosters, so they are created by an admin.
+     */
+    public const REGISTERABLE = [self::STUDENT, self::INDIVIDUAL];
+
     protected $idPrefix = 'ROLE';
 
     protected $fillable = [

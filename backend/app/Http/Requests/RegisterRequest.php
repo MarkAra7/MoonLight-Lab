@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class RegisterRequest extends FormRequest
 {
@@ -22,7 +24,7 @@ class RegisterRequest extends FormRequest
             'country' => ['nullable', 'string', 'max:100'],
             'preferred_language' => ['nullable', 'string', 'max:10'],
             'password' => ['required', 'confirmed', \Illuminate\Validation\Rules\Password::defaults()],
-            'role' => ['required', 'string', 'in:student,teacher,individual'],
+            'role' => ['required', 'string', Rule::in(Role::REGISTERABLE)],
         ];
     }
 }
