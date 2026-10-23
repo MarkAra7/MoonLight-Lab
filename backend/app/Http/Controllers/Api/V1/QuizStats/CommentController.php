@@ -6,11 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Models\Comment;
 use App\Models\Quiz;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\ValidationException;
 
 class CommentController extends Controller
 {
     public function index(Quiz $quiz)
     {
+        Gate::authorize('view', $quiz);
+
         $comments = Comment::where('quiz_id', $quiz->quiz_id)
             ->whereNull('parent_id')
             ->with('user:id,first_name,last_name,username', 'replies.user:id,first_name,last_name,username')
@@ -36,10 +40,24 @@ class CommentController extends Controller
 
     public function store(Request $request, Quiz $quiz)
     {
+        Gate::authorize('view', $quiz);
+
         $data = $request->validate([
             'body' => 'required|string|max:2000',
-            'parent_id' => 'nullable|string|exists:comments,comment_id',
+            'parent_id' => 'nullable|string',
         ]);
+
+        if (! empty($data['parent_id'])) {
+            $parentExists = Comment::where('quiz_id', $quiz->quiz_id)
+                ->where('comment_id', $data['parent_id'])
+                ->exists();
+
+            if (! $parentExists) {
+                throw ValidationException::withMessages([
+                    'parent_id' => ['The selected parent comment is not part of this quiz.'],
+                ]);
+            }
+        }
 
         $comment = Comment::create([
             'quiz_id' => $quiz->quiz_id,

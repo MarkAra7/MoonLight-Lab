@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Category;
+use App\Models\Comment;
 use App\Models\Quiz;
 use App\Models\QuizStatus;
 use App\Models\Role;
@@ -114,6 +115,49 @@ class QuizSecurityTest extends TestCase
         }
 
         $this->getJson('/api/v1/classes/lookup/NOPE00')->assertStatus(429);
+    }
+
+    public function test_private_quiz_rejects_ratings_and_comments(): void
+    {
+        $this->actingAs($this->other, 'sanctum')
+            ->postJson('/api/v1/quizzes/'.$this->privateQuiz->quiz_id.'/ratings', ['rating' => 5])
+            ->assertStatus(403);
+
+        $this->actingAs($this->other, 'sanctum')
+            ->postJson('/api/v1/quizzes/'.$this->privateQuiz->quiz_id.'/comments', ['body' => 'Hello'])
+            ->assertStatus(403);
+
+        $this->actingAs($this->other, 'sanctum')
+            ->getJson('/api/v1/quizzes/'.$this->privateQuiz->quiz_id.'/ratings')
+            ->assertStatus(403);
+
+        $this->actingAs($this->other, 'sanctum')
+            ->getJson('/api/v1/quizzes/'.$this->privateQuiz->quiz_id.'/comments')
+            ->assertStatus(403);
+    }
+
+    public function test_comment_reply_must_belong_to_the_same_quiz(): void
+    {
+        $this->actingAs($this->other, 'sanctum')
+            ->postJson('/api/v1/quizzes/'.$this->publicQuiz->quiz_id.'/comments', ['body' => 'On the public quiz'])
+            ->assertStatus(201);
+
+        $foreignCommentId = Comment::where('quiz_id', $this->publicQuiz->quiz_id)->value('comment_id');
+
+        $this->actingAs($this->other, 'sanctum')
+            ->postJson('/api/v1/quizzes/'.$this->privateQuiz->quiz_id.'/comments', [
+                'body' => 'Cross-quiz reply',
+                'parent_id' => $foreignCommentId,
+            ])
+            ->assertStatus(403);
+
+        $this->actingAs($this->author, 'sanctum')
+            ->postJson('/api/v1/quizzes/'.$this->privateQuiz->quiz_id.'/comments', [
+                'body' => 'Cross-quiz reply',
+                'parent_id' => $foreignCommentId,
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('parent_id');
     }
 
     public function test_repeated_views_from_one_device_only_count_once(): void

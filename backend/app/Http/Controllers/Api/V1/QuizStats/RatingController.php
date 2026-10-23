@@ -6,11 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\Quiz;
 use App\Models\Rating;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class RatingController extends Controller
 {
     public function index(Quiz $quiz)
     {
+        Gate::authorize('view', $quiz);
+
         $ratings = Rating::where('quiz_id', $quiz->quiz_id)
             ->with('user:id,first_name,last_name')
             ->orderBy('created_at', 'desc')
@@ -31,6 +34,8 @@ class RatingController extends Controller
 
     public function store(Request $request, Quiz $quiz)
     {
+        Gate::authorize('view', $quiz);
+
         $data = $request->validate([
             'rating' => 'required|integer|min:1|max:5',
         ]);
@@ -55,6 +60,8 @@ class RatingController extends Controller
 
     public function userRating(Request $request, Quiz $quiz)
     {
+        Gate::authorize('view', $quiz);
+
         $rating = Rating::where('quiz_id', $quiz->quiz_id)
             ->where('user_id', $request->user()->id)
             ->first();
