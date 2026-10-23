@@ -90,6 +90,8 @@ Route::prefix('v1')->group(function () {
         Route::post('/quizzes/{quiz}/ratings', [QuizRatingController::class, 'store']);
         Route::post('/quizzes/{quiz}/comments', [QuizCommentController::class, 'store']);
         Route::delete('/comments/{comment}', [QuizCommentController::class, 'destroy']);
+
+        Route::post('/run-code', [RunCodeController::class, 'execute'])->middleware('throttle:20,1');
     });
 
     Route::get('/quizzes', [QuizController::class, 'index']);
@@ -98,7 +100,6 @@ Route::prefix('v1')->group(function () {
     Route::post('/quizzes/{quiz}/views', [QuizStatsController::class, 'incrementViews']);
     Route::get('/quizzes/{quiz}/ratings', [QuizRatingController::class, 'index']);
     Route::get('/quizzes/{quiz}/comments', [QuizCommentController::class, 'index']);
-    Route::post('/run-code', [RunCodeController::class, 'execute']);
 
     Route::post('/parties/join', [PartyController::class, 'join'])->middleware('optional.sanctum')->middleware('throttle:6,1');
     Route::get('/parties/{party:party_code}/state', [PartyController::class, 'state']);

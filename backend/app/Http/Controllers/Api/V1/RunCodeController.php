@@ -56,9 +56,11 @@ class RunCodeController extends Controller
                 'error' => $run['stderr'] ?? ($result['message'] ?? ''),
             ]);
         } catch (\Exception $e) {
+            report($e);
+
             return response()->json([
                 'output' => '',
-                'error' => 'Connection error: ' . $e->getMessage(),
+                'error' => 'Could not reach the execution service. Please try again.',
             ], 502);
         }
     }
