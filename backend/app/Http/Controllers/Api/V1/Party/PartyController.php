@@ -444,6 +444,7 @@ class PartyController extends Controller
                 'answers' => $question->answers()->orderBy('display_order')->get(['answer_id', 'answer_text']),
             ] : null,
             'question_end_at' => $questionEndsAt,
+            'question_expired' => $question ? $party->questionExpired() : false,
             'answered_count' => $answeredCount,
             'players_count' => $party->players()->count(),
             'standings' => $party->players()

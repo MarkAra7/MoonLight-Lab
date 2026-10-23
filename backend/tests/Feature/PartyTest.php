@@ -322,6 +322,24 @@ class PartyTest extends TestCase
             ->assertJsonPath('message', 'This party is full.');
     }
 
+    public function test_state_reports_the_question_as_expired_after_the_deadline(): void
+    {
+        [$party] = $this->joinedPartyPayload();
+        $partyId = $party['party']['party_code'];
+
+        $this->actingAs($this->host, 'sanctum')->postJson('/api/v1/parties/'.$partyId.'/start')->assertOk();
+
+        $this->getJson('/api/v1/parties/'.$partyId.'/state')
+            ->assertOk()
+            ->assertJsonPath('question_expired', false);
+
+        $this->travel(17)->seconds();
+
+        $this->getJson('/api/v1/parties/'.$partyId.'/state')
+            ->assertOk()
+            ->assertJsonPath('question_expired', true);
+    }
+
     public function test_guest_with_token_can_leave_party(): void
     {
         [$party, $guestToken] = $this->joinedPartyPayload();

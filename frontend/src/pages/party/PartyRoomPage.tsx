@@ -117,7 +117,7 @@ export function PartyRoomPage() {
   const endMs = state?.question_end_at ? new Date(state.question_end_at).getTime() : null;
   const remainingMs = endMs !== null ? Math.max(0, endMs - now) : 0;
   const secondsLeft = endMs !== null ? Math.ceil(remainingMs / 1000) : totalSeconds;
-  const expired = endMs !== null && remainingMs <= 0;
+  const expired = state?.question_expired ?? (endMs !== null && remainingMs <= 0);
   // Nothing changes once the game is over, so stop the polls and the ticker.
   const polling = phase !== "results" && phase !== "cancelled";
 

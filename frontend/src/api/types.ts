@@ -192,6 +192,7 @@ export interface PartyState {
   total_questions: number;
   question: PartyQuestion | null;
   question_end_at: string | null;
+  question_expired: boolean;
   answered_count: number;
   players_count: number;
   standings: PartyStanding[];
