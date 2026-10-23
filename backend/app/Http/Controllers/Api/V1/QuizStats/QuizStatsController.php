@@ -8,13 +8,13 @@ use App\Models\QuizAttempt;
 use App\Models\Rating;
 use App\Models\Comment;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
 
 class QuizStatsController extends Controller
 {
     public function stats(Request $request, Quiz $quiz)
     {
-        Gate::authorize('view', $quiz);
+        // Stats include student names, so only the author may read them.
+        abort_unless($quiz->author_id === $request->user()->id, 403, 'Only the quiz author can view its stats.');
 
         $quiz->load(['category', 'media', 'author', 'questions.answers']);
 

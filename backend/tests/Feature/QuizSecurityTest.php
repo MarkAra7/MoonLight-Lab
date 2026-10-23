@@ -88,4 +88,22 @@ class QuizSecurityTest extends TestCase
             ->assertJsonPath('error', 'Could not reach the execution service. Please try again.')
             ->assertDontSee('Secret internal host');
     }
+
+    public function test_quiz_stats_are_only_visible_to_the_author(): void
+    {
+        $this->actingAs($this->other, 'sanctum')
+            ->getJson('/api/v1/quizzes/'.$this->publicQuiz->quiz_id.'/stats')
+            ->assertStatus(403);
+
+        $this->actingAs($this->author, 'sanctum')
+            ->getJson('/api/v1/quizzes/'.$this->publicQuiz->quiz_id.'/stats')
+            ->assertOk()
+            ->assertJsonPath('quiz.quiz_id', $this->publicQuiz->quiz_id);
+    }
+
+    public function test_quiz_stats_require_authentication(): void
+    {
+        $this->getJson('/api/v1/quizzes/'.$this->publicQuiz->quiz_id.'/stats')
+            ->assertStatus(401);
+    }
 }

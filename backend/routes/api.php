@@ -91,12 +91,12 @@ Route::prefix('v1')->group(function () {
         Route::post('/quizzes/{quiz}/comments', [QuizCommentController::class, 'store']);
         Route::delete('/comments/{comment}', [QuizCommentController::class, 'destroy']);
 
+        Route::get('/quizzes/{quiz}/stats', [QuizStatsController::class, 'stats']);
         Route::post('/run-code', [RunCodeController::class, 'execute'])->middleware('throttle:20,1');
     });
 
     Route::get('/quizzes', [QuizController::class, 'index']);
     Route::get('/quizzes/{quiz}', [QuizController::class, 'show'])->middleware('optional.sanctum');
-    Route::get('/quizzes/{quiz}/stats', [QuizStatsController::class, 'stats']);
     Route::post('/quizzes/{quiz}/views', [QuizStatsController::class, 'incrementViews']);
     Route::get('/quizzes/{quiz}/ratings', [QuizRatingController::class, 'index']);
     Route::get('/quizzes/{quiz}/comments', [QuizCommentController::class, 'index']);
