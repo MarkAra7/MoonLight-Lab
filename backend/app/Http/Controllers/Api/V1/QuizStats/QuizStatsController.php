@@ -8,6 +8,7 @@ use App\Models\QuizAttempt;
 use App\Models\Rating;
 use App\Models\Comment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class QuizStatsController extends Controller
 {
@@ -114,7 +115,14 @@ class QuizStatsController extends Controller
 
     public function incrementViews(Request $request, Quiz $quiz)
     {
-        $quiz->increment('views');
-        return response()->json(['views' => $quiz->fresh()->views]);
+        // Count at most one view per device per hour so a refresh loop (or a
+        // script) cannot inflate a quiz's popularity.
+        $key = 'quiz_view:'.$quiz->quiz_id.':'.$request->ip();
+
+        if (Cache::add($key, true, now()->addHour())) {
+            $quiz->increment('views');
+        }
+
+        return response()->json(['views' => (int) $quiz->fresh()->views]);
     }
 }

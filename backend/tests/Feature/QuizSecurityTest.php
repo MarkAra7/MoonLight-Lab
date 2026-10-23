@@ -106,4 +106,15 @@ class QuizSecurityTest extends TestCase
         $this->getJson('/api/v1/quizzes/'.$this->publicQuiz->quiz_id.'/stats')
             ->assertStatus(401);
     }
+
+    public function test_repeated_views_from_one_device_only_count_once(): void
+    {
+        $url = '/api/v1/quizzes/'.$this->publicQuiz->quiz_id.'/views';
+
+        $this->postJson($url)->assertOk()->assertJsonPath('views', 1);
+        $this->postJson($url)->assertOk()->assertJsonPath('views', 1);
+        $this->postJson($url)->assertOk()->assertJsonPath('views', 1);
+
+        $this->assertSame(1, (int) $this->publicQuiz->fresh()->views);
+    }
 }

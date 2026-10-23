@@ -97,7 +97,7 @@ Route::prefix('v1')->group(function () {
 
     Route::get('/quizzes', [QuizController::class, 'index']);
     Route::get('/quizzes/{quiz}', [QuizController::class, 'show'])->middleware('optional.sanctum');
-    Route::post('/quizzes/{quiz}/views', [QuizStatsController::class, 'incrementViews']);
+    Route::post('/quizzes/{quiz}/views', [QuizStatsController::class, 'incrementViews'])->middleware('throttle:20,1');
     Route::get('/quizzes/{quiz}/ratings', [QuizRatingController::class, 'index']);
     Route::get('/quizzes/{quiz}/comments', [QuizCommentController::class, 'index']);
 
