@@ -107,6 +107,15 @@ class QuizSecurityTest extends TestCase
             ->assertStatus(401);
     }
 
+    public function test_class_code_lookup_is_rate_limited(): void
+    {
+        for ($attempt = 1; $attempt <= 20; $attempt++) {
+            $this->getJson('/api/v1/classes/lookup/NOPE00')->assertStatus(404);
+        }
+
+        $this->getJson('/api/v1/classes/lookup/NOPE00')->assertStatus(429);
+    }
+
     public function test_repeated_views_from_one_device_only_count_once(): void
     {
         $url = '/api/v1/quizzes/'.$this->publicQuiz->quiz_id.'/views';

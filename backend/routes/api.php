@@ -30,9 +30,9 @@ Route::prefix('v1')->group(function () {
 
     Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,1');
     Route::post('/login', [AuthController::class, 'login']);
-    Route::get('/users/profile/{username}', [UserController::class, 'publicProfile'])->middleware('optional.sanctum');
-    Route::get('/users/search', [UserController::class, 'search'])->middleware('optional.sanctum');
-    Route::get('/classes/lookup/{code}', [StudentClassController::class, 'lookup'])->middleware('optional.sanctum');
+    Route::get('/users/profile/{username}', [UserController::class, 'publicProfile'])->middleware(['optional.sanctum', 'throttle:30,1']);
+    Route::get('/users/search', [UserController::class, 'search'])->middleware(['optional.sanctum', 'throttle:30,1']);
+    Route::get('/classes/lookup/{code}', [StudentClassController::class, 'lookup'])->middleware(['optional.sanctum', 'throttle:20,1']);
     Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:5,10,email');
     Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
