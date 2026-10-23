@@ -115,7 +115,6 @@ export function PartyRoomPage() {
   const questionIndex = state?.question_index ?? 0;
   const totalSeconds = state?.party.question_seconds ?? 0;
   const endMs = state?.question_end_at ? new Date(state.question_end_at).getTime() : null;
-  const totalMs = totalSeconds * 1000;
   const remainingMs = endMs !== null ? Math.max(0, endMs - now) : 0;
   const secondsLeft = endMs !== null ? Math.ceil(remainingMs / 1000) : totalSeconds;
   const expired = endMs !== null && remainingMs <= 0;
@@ -255,13 +254,9 @@ export function PartyRoomPage() {
     setAnswerStatus("sending");
     setAnswerError(null);
 
-    const startedAtMs = endMs !== null ? endMs - totalMs : Date.now();
-    const answeredAtMs = Math.max(0, Math.min(totalMs, Date.now() - startedAtMs));
-
     try {
       const { data } = await partyApi.answer(code, {
         answer_id: answerId,
-        answered_at_ms: answeredAtMs,
       });
 
       setFeedback({ isCorrect: Boolean(data.is_correct), points: data.points ?? 0 });

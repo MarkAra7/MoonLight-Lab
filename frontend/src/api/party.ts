@@ -30,7 +30,6 @@ export interface JoinPartyPayload {
 
 export interface PartyAnswerPayload {
   answer_id: string;
-  answered_at_ms: number;
 }
 
 export interface PartyJoinResult {
