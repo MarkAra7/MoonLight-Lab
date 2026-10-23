@@ -306,6 +306,22 @@ class PartyTest extends TestCase
         $this->assertLessThan(140, $response['points']);
     }
 
+    public function test_party_capacity_is_enforced(): void
+    {
+        $party = $this->actingAs($this->host, 'sanctum')->postJson('/api/v1/parties', [
+            'quiz_id' => $this->quiz->quiz_id,
+            'allow_guests' => true,
+            'question_seconds' => 15,
+            'max_players' => 2,
+        ])->assertStatus(201)->json();
+
+        $code = $party['party']['party_code'];
+
+        $this->joinAsGuest($code, 'One')->assertStatus(201);
+        $this->joinAsGuest($code, 'Two')->assertStatus(422)
+            ->assertJsonPath('message', 'This party is full.');
+    }
+
     public function test_guest_with_token_can_leave_party(): void
     {
         [$party, $guestToken] = $this->joinedPartyPayload();

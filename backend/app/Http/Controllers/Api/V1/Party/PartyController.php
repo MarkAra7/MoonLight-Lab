@@ -7,9 +7,11 @@ use App\Models\Party;
 use App\Models\PartyAnswer;
 use App\Models\PartyPlayer;
 use App\Models\Quiz;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -106,27 +108,55 @@ class PartyController extends Controller
             return response()->json(['message' => 'Nickname must be 2-20 characters (letters, numbers, spaces, - or _).'], 422);
         }
 
-        $slug = $this->slug($nickname);
-
-        if (PartyPlayer::where('party_id', $party->id)->where('nickname_slug', $slug)->exists()) {
-            return response()->json(['message' => 'That nickname is already taken in this party.'], 422);
-        }
-
-        if ($party->players()->count() >= $party->max_players) {
-            return response()->json(['message' => 'This party is full.'], 422);
-        }
-
         if (! $this->joinAllowedForIp($request, $party)) {
             return response()->json(['message' => 'Too many connections from this device. Suspicious activity blocked.'], 429);
         }
 
-        $player = PartyPlayer::create([
-            'party_id' => $party->id,
-            'user_id' => $user?->id,
-            'nickname' => $nickname,
-            'nickname_slug' => $slug,
-            'player_token' => $this->playerToken(),
-        ]);
+        $slug = $this->slug($nickname);
+
+        [$player, $failure] = DB::transaction(function () use ($party, $user, $nickname, $slug) {
+            // Lock the party row so two simultaneous joins cannot both read
+            // the same free slot or the same available nickname.
+            $locked = Party::whereKey($party->id)->lockForUpdate()->first();
+
+            if (! $locked || $locked->status !== Party::STATUS_LOBBY) {
+                return [null, ['This party has already started.', 422]];
+            }
+
+            if ($locked->players()->count() >= $locked->max_players) {
+                return [null, ['This party is full.', 422]];
+            }
+
+            $taken = PartyPlayer::where('party_id', $locked->id)
+                ->where('nickname_slug', $slug)
+                ->exists();
+
+            if ($taken) {
+                return [null, ['That nickname is already taken in this party.', 422]];
+            }
+
+            try {
+                return [PartyPlayer::create([
+                    'party_id' => $locked->id,
+                    'user_id' => $user?->id,
+                    'nickname' => $nickname,
+                    'nickname_slug' => $slug,
+                    'player_token' => $this->playerToken(),
+                ]), null];
+            } catch (QueryException $e) {
+                // The unique index is the last line of defence if the lock
+                // could not serialise the two inserts.
+                if ($this->isUniqueViolation($e)) {
+                    return [null, ['That nickname is already taken in this party.', 422]];
+                }
+
+                throw $e;
+            }
+        });
+
+        if ($failure !== null) {
+            return response()->json(['message' => $failure[0]], $failure[1]);
+        }
 
         Log::info('Party join', ['party_id' => $party->id, 'player_id' => $player->id, 'nickname' => $nickname, 'registered' => (bool) $user]);
 
@@ -251,22 +281,32 @@ class PartyController extends Controller
             $points = 100 + $speedBonus;
         }
 
-        $partyAnswer = PartyAnswer::create([
-            'party_id' => $party->id,
-            'player_id' => $player->id,
-            'question_index' => $questionIndex,
-            'answer_id' => $answer->answer_id,
-            'is_correct' => $answer->is_correct,
-            'points' => $points,
-            'answered_at_ms' => $elapsedMs,
-        ]);
+        try {
+            DB::transaction(function () use ($party, $player, $questionIndex, $answer, $points, $elapsedMs) {
+                PartyAnswer::create([
+                    'party_id' => $party->id,
+                    'player_id' => $player->id,
+                    'question_index' => $questionIndex,
+                    'answer_id' => $answer->answer_id,
+                    'is_correct' => $answer->is_correct,
+                    'points' => $points,
+                    'answered_at_ms' => $elapsedMs,
+                ]);
 
-        $player->increment('score', $points);
-        $player->increment('total');
-        if ($answer->is_correct) {
-            $player->increment('correct');
+                $player->increment('score', $points);
+                $player->increment('total');
+                if ($answer->is_correct) {
+                    $player->increment('correct');
+                }
+                $player->increment('total_time_ms', $elapsedMs);
+            });
+        } catch (QueryException $e) {
+            if ($this->isUniqueViolation($e)) {
+                return response()->json(['message' => 'You already answered this question.'], 422);
+            }
+
+            throw $e;
         }
-        $player->increment('total_time_ms', $elapsedMs);
 
         $correctAnswerId = $question->answers()->where('is_correct', true)->value('answer_id');
 
@@ -458,5 +498,10 @@ class PartyController extends Controller
         } while (Party::where('party_code', $code)->exists());
 
         return $code;
+    }
+
+    protected function isUniqueViolation(QueryException $e): bool
+    {
+        return ($e->errorInfo[0] ?? null) === '23000';
     }
 }
