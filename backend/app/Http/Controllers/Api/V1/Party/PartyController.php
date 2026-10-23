@@ -17,6 +17,12 @@ use Illuminate\Validation\Rule;
 
 class PartyController extends Controller
 {
+    /**
+     * Small allowance for network latency so an answer sent just before the
+     * deadline is not lost; it still earns no speed bonus.
+     */
+    private const LATE_GRACE_MS = 1000;
+
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
@@ -199,7 +205,6 @@ class PartyController extends Controller
 
         $data = $request->validate([
             'answer_id' => ['required', 'string'],
-            'answered_at_ms' => ['required', 'integer'],
         ]);
 
         $questionIndex = $party->current_question_index;
@@ -215,13 +220,18 @@ class PartyController extends Controller
             return response()->json(['message' => 'Invalid answer for this question.'], 422);
         }
 
-        $maxMs = $party->question_seconds * 1000;
+        $startedAt = $party->question_started_at;
 
-        if ($data['answered_at_ms'] < -500 || $data['answered_at_ms'] > $maxMs + 500) {
-            return response()->json(['message' => 'Answer time is out of range. Anti-cheat triggered.'], 422);
+        if (! $startedAt) {
+            return response()->json(['message' => 'No question is active right now.'], 422);
         }
 
-        if ($party->questionExpired() && $data['answered_at_ms'] >= $maxMs) {
+        // The server clock decides how fast the player was: a client can no
+        // longer claim a better time than it actually took.
+        $maxMs = $party->question_seconds * 1000;
+        $elapsedMs = max(0, now()->getTimestampMs() - $startedAt->getTimestampMs());
+
+        if ($elapsedMs > $maxMs + self::LATE_GRACE_MS) {
             return response()->json(['message' => 'Time is up for this question.'], 422);
         }
 
@@ -233,10 +243,11 @@ class PartyController extends Controller
             return response()->json(['message' => 'You already answered this question.'], 422);
         }
 
+        $elapsedMs = min($elapsedMs, $maxMs);
+
         $points = 0;
-        if ($answer->is_correct && ! $party->questionExpired()) {
-            $timeLeft = max(0, $maxMs - $data['answered_at_ms']);
-            $speedBonus = (int) round(($timeLeft / $maxMs) * 100);
+        if ($answer->is_correct) {
+            $speedBonus = (int) round((($maxMs - $elapsedMs) / $maxMs) * 100);
             $points = 100 + $speedBonus;
         }
 
@@ -247,7 +258,7 @@ class PartyController extends Controller
             'answer_id' => $answer->answer_id,
             'is_correct' => $answer->is_correct,
             'points' => $points,
-            'answered_at_ms' => $data['answered_at_ms'],
+            'answered_at_ms' => $elapsedMs,
         ]);
 
         $player->increment('score', $points);
@@ -255,7 +266,7 @@ class PartyController extends Controller
         if ($answer->is_correct) {
             $player->increment('correct');
         }
-        $player->increment('total_time_ms', max(0, $data['answered_at_ms']));
+        $player->increment('total_time_ms', $elapsedMs);
 
         $correctAnswerId = $question->answers()->where('is_correct', true)->value('answer_id');
 

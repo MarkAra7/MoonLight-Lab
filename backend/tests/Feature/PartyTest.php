@@ -250,7 +250,7 @@ class PartyTest extends TestCase
         $this->assertSame($correctAnswerId, $response['correct_answer_id']);
     }
 
-    public function test_anticheat_rejects_out_of_window_answers(): void
+    public function test_late_answers_are_rejected(): void
     {
         [$party, $guestToken] = $this->joinedPartyPayload();
         $partyId = $party['party']['party_code'];
@@ -260,19 +260,50 @@ class PartyTest extends TestCase
         $state = $this->getJson('/api/v1/parties/'.$partyId.'/state')->json();
         $answerId = $state['question']['answers'][0]['answer_id'];
 
+        // The server clock, not the client, decides when the question closed.
+        $this->travel(17)->seconds();
+
         $this->withHeader('X-Player-Token', $guestToken)
             ->postJson('/api/v1/parties/'.$partyId.'/answer', [
                 'answer_id' => $answerId,
-                'answered_at_ms' => 999999,
             ])
-            ->assertStatus(422);
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'Time is up for this question.');
 
         $this->withHeader('X-Player-Token', $guestToken)
             ->postJson('/api/v1/parties/'.$partyId.'/answer', [
                 'answer_id' => 'A-FAKE-ID',
-                'answered_at_ms' => 1000,
             ])
             ->assertStatus(422);
+    }
+
+    public function test_client_cannot_fake_a_faster_answer_time(): void
+    {
+        [$party, $guestToken] = $this->joinedPartyPayload();
+        $partyId = $party['party']['party_code'];
+
+        $this->actingAs($this->host, 'sanctum')->postJson('/api/v1/parties/'.$partyId.'/start')->assertOk();
+
+        $state = $this->getJson('/api/v1/parties/'.$partyId.'/state')->json();
+        $correctAnswerId = $state['question']['answers'][0]['answer_id'];
+
+        // Ten of fifteen seconds used up, yet the old API would have let the
+        // client claim it took 0 ms and hand out the full speed bonus.
+        $this->travel(10)->seconds();
+
+        $response = $this->withHeader('X-Player-Token', $guestToken)
+            ->postJson('/api/v1/parties/'.$partyId.'/answer', [
+                'answer_id' => $correctAnswerId,
+                'answered_at_ms' => 0,
+            ])
+            ->assertOk()
+            ->json();
+
+        $this->assertTrue($response['is_correct']);
+        // Roughly ten of the fifteen seconds remain, so the bonus is partial.
+        // Claiming answered_at_ms=0 would have produced the full 200 points.
+        $this->assertGreaterThan(100, $response['points']);
+        $this->assertLessThan(140, $response['points']);
     }
 
     public function test_guest_with_token_can_leave_party(): void
