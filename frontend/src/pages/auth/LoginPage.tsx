@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Label, Button, Spinner, Alert } from "flowbite-react";
 import { useAuth } from "@/context/AuthContext";
 import { getErrorMessage } from "@/api";
@@ -129,9 +129,15 @@ export function LoginPage() {
           </div>
 
           <div>
-            <Label htmlFor="password" className="mb-2">
-              Password
-            </Label>
+            <div className="mb-2 flex items-center justify-between">
+              <Label htmlFor="password">Password</Label>
+              <Link
+                to="/forgot-password"
+                className="text-sm font-medium text-sky-600 hover:underline dark:text-sky-400"
+              >
+                Forgot password?
+              </Link>
+            </div>
             <div className="relative">
               <input
                 id="password"
