@@ -3,8 +3,11 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Notifications\PasswordReset as PasswordResetNotification;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class AuthTest extends TestCase
@@ -86,6 +89,44 @@ class AuthTest extends TestCase
         $known->assertOk();
         $unknown->assertOk();
         $this->assertSame($known->json(), $unknown->json());
+    }
+
+    public function test_user_can_reset_password_with_the_emailed_token(): void
+    {
+        Notification::fake();
+
+        $user = User::factory()->create(['password' => bcrypt('old-password')]);
+
+        $this->postJson('/api/v1/forgot-password', ['email' => $user->email])
+            ->assertOk();
+
+        $token = null;
+        Notification::assertSentTo(
+            $user,
+            PasswordResetNotification::class,
+            function (PasswordResetNotification $notification) use (&$token) {
+                $token = $notification->token;
+
+                return true;
+            }
+        );
+
+        $this->postJson('/api/v1/reset-password', [
+            'token' => $token,
+            'email' => $user->email,
+            'password' => 'new-password',
+            'password_confirmation' => 'new-password',
+        ])->assertOk();
+
+        $this->assertTrue(Hash::check('new-password', $user->fresh()->password));
+
+        // The token is single use, so it cannot be replayed.
+        $this->postJson('/api/v1/reset-password', [
+            'token' => $token,
+            'email' => $user->email,
+            'password' => 'another-password',
+            'password_confirmation' => 'another-password',
+        ])->assertStatus(400);
     }
 
     public function test_registration_is_rate_limited(): void
