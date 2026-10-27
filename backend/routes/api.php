@@ -49,6 +49,8 @@ Route::prefix('v1')->group(function () {
         Route::post('/email-change/cancel', [EmailChangeController::class, 'cancel']);
 
         Route::apiResource('users', UserController::class);
+        Route::patch('/users/{user}/role', [UserController::class, 'updateRole']);
+        Route::get('/admin/roles', [RoleController::class, 'adminIndex']);
 
         Route::get('/media/{media}', [MediaController::class, 'show']);
         Route::post('/media', [MediaController::class, 'store']);

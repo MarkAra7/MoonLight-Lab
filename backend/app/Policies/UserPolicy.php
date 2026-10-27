@@ -66,4 +66,21 @@ class UserPolicy
             ? Response::allow()
             : Response::deny('You do not have permission to delete this user.');
     }
+
+    /**
+     * Determine whether the user can change another account's role.
+     *
+     * Admins manage roles, but nobody may change their own: that would let a
+     * single admin lock themselves out of the management screen.
+     */
+    public function assignRole(User $user, User $model): Response
+    {
+        if ($user->role?->title !== Role::ADMIN) {
+            return Response::deny('You do not have permission to change roles.');
+        }
+
+        return $user->is($model)
+            ? Response::deny('You cannot change your own role.')
+            : Response::allow();
+    }
 }

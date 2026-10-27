@@ -12,11 +12,22 @@ use Illuminate\Support\Facades\Gate;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         Gate::authorize('viewAny', User::class);
 
-        return UserResource::collection(User::with('role')->paginate(50));
+        $term = trim((string) $request->input('q'));
+
+        $users = User::query()
+            ->with(['role', 'avatar'])
+            ->when($term !== '', fn ($query) => $query->where(fn ($match) => $match
+                ->where('username', 'like', '%'.$term.'%')
+                ->orWhere('name', 'like', '%'.$term.'%')
+                ->orWhere('email', 'like', '%'.$term.'%')))
+            ->latest()
+            ->paginate(50);
+
+        return UserResource::collection($users);
     }
 
     public function store(StoreUserRequest $request)
@@ -47,6 +58,23 @@ class UserController extends Controller
         $user->delete();
 
         return response()->noContent();
+    }
+
+    /**
+     * Admin-only role change. Kept separate from `update` because an admin
+     * must not need the target user's current password to promote them.
+     */
+    public function updateRole(Request $request, User $user)
+    {
+        Gate::authorize('assignRole', $user);
+
+        $validated = $request->validate([
+            'role_id' => ['required', 'exists:roles,id'],
+        ]);
+
+        $user->update(['role_id' => $validated['role_id']]);
+
+        return UserResource::make($user->load('role'));
     }
 
     public function authenticatedUser(Request $request)

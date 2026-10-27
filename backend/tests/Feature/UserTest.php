@@ -91,4 +91,105 @@ class UserTest extends TestCase
         $response->assertStatus(403)
             ->assertJsonPath('message', 'You do not have permission to delete this user.');
     }
+
+    private function admin(): User
+    {
+        return User::factory()->create([
+            'role_id' => Role::where('title', 'admin')->first()->id,
+        ]);
+    }
+
+    public function test_admin_can_search_users_by_email_or_username(): void
+    {
+        $this->actingAs($this->admin(), 'sanctum');
+
+        $target = User::factory()->create([
+            'username' => 'needle_user',
+            'email' => 'needle@example.com',
+        ]);
+        User::factory()->create(['username' => 'someone_else']);
+
+        $response = $this->getJson('/api/v1/users?q=needle')->assertOk();
+
+        $ids = collect($response->json('data'))->pluck('id');
+        $this->assertTrue($ids->contains($target->id));
+        $this->assertCount(1, $ids);
+    }
+
+    public function test_non_admin_cannot_list_users(): void
+    {
+        $student = User::factory()->create([
+            'role_id' => Role::where('title', 'student')->first()->id,
+        ]);
+
+        $this->actingAs($student, 'sanctum')
+            ->getJson('/api/v1/users')
+            ->assertStatus(403);
+    }
+
+    public function test_admin_can_list_every_role(): void
+    {
+        $titles = collect($this->actingAs($this->admin(), 'sanctum')
+            ->getJson('/api/v1/admin/roles')
+            ->assertOk()
+            ->json())
+            ->pluck('title');
+
+        $this->assertEqualsCanonicalizing(['admin', 'teacher', 'student', 'individual'], $titles->all());
+    }
+
+    public function test_non_admin_cannot_list_every_role(): void
+    {
+        $teacher = User::factory()->create([
+            'role_id' => Role::where('title', 'teacher')->first()->id,
+        ]);
+
+        $this->actingAs($teacher, 'sanctum')
+            ->getJson('/api/v1/admin/roles')
+            ->assertStatus(403);
+    }
+
+    public function test_admin_can_change_another_users_role(): void
+    {
+        $this->actingAs($this->admin(), 'sanctum');
+
+        $student = User::factory()->create([
+            'role_id' => Role::where('title', 'student')->first()->id,
+        ]);
+        $teacherRole = Role::where('title', 'teacher')->first();
+
+        $this->patchJson('/api/v1/users/'.$student->id.'/role', ['role_id' => $teacherRole->id])
+            ->assertOk()
+            ->assertJsonPath('role.title', 'teacher');
+
+        $this->assertDatabaseHas('users', [
+            'id' => $student->id,
+            'role_id' => $teacherRole->id,
+        ]);
+    }
+
+    public function test_admin_cannot_change_their_own_role(): void
+    {
+        $admin = $this->admin();
+        $this->actingAs($admin, 'sanctum');
+
+        $this->patchJson('/api/v1/users/'.$admin->id.'/role', [
+            'role_id' => Role::where('title', 'student')->first()->id,
+        ])->assertStatus(403);
+    }
+
+    public function test_non_admin_cannot_change_roles(): void
+    {
+        $teacher = User::factory()->create([
+            'role_id' => Role::where('title', 'teacher')->first()->id,
+        ]);
+        $this->actingAs($teacher, 'sanctum');
+
+        $student = User::factory()->create([
+            'role_id' => Role::where('title', 'student')->first()->id,
+        ]);
+
+        $this->patchJson('/api/v1/users/'.$student->id.'/role', ['role_id' => $teacher->role_id])
+            ->assertStatus(403);
+    }
 }
