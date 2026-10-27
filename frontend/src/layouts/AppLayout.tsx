@@ -157,6 +157,11 @@ export function AppLayout() {
                 <DropdownItem as={Link} to="/settings">
                   Settings
                 </DropdownItem>
+                {user.role?.title === "admin" && (
+                  <DropdownItem as={Link} to="/admin/users">
+                    Manage users
+                  </DropdownItem>
+                )}
                 <DropdownDivider />
                 <DropdownItem onClick={handleLogout}>
                   Sign out

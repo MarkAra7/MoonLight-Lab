@@ -4,6 +4,7 @@ import { LoginPage } from "@/pages/auth/LoginPage";
 import { RegisterPage } from "@/pages/auth/RegisterPage";
 import { ForgotPasswordPage } from "@/pages/auth/ForgotPasswordPage";
 import { ResetPasswordPage } from "@/pages/auth/ResetPasswordPage";
+import { AdminUsersPage } from "@/pages/admin/AdminUsersPage";
 import { VerifyEmailPage } from "@/pages/auth/VerifyEmailPage";
 import { SettingsPage } from "@/pages/settings/SettingsPage";
 import { UserProfilePage } from "@/pages/profile/UserProfilePage";
@@ -33,6 +34,7 @@ export const routes: AppRoute[] = [
   { path: "/register", element: <RegisterPage /> },
   { path: "/forgot-password", element: <ForgotPasswordPage /> },
   { path: "/reset-password", element: <ResetPasswordPage /> },
+  { path: "/admin/users", element: <AdminUsersPage /> },
   { path: "/verify-email", element: <VerifyEmailPage /> },
   { path: "/settings", element: <SettingsPage /> },
   { path: "/search", element: <SearchPage /> },
