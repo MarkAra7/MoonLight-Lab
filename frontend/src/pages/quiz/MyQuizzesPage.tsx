@@ -6,6 +6,7 @@ import { quizApi } from "@/api/quiz";
 import { useAuth } from "@/context/AuthContext";
 import { Pagination } from "@/components/Pagination";
 import { QuizCard } from "@/components/QuizCard";
+import { VerifyEmailNotice } from "@/components/VerifyEmailNotice";
 import type { Quiz } from "@/api/types";
 
 function StatusBadge({ status }: { status?: string | null }) {
@@ -104,6 +105,8 @@ export function MyQuizzesPage() {
           New quiz
         </Link>
       </header>
+
+      <VerifyEmailNotice className="mb-8" />
 
       {quizzesLoading ? (
         <div className="flex justify-center py-24">

@@ -5,6 +5,7 @@ import { getErrorMessage } from "@/api";
 import { classApi } from "@/api/class";
 import { useAuth } from "@/context/AuthContext";
 import { truncate } from "@/utils/helpers";
+import { VerifyEmailNotice } from "@/components/VerifyEmailNotice";
 
 const inputClasses = [
   "w-full rounded-[10px] border bg-slate-50 px-4 py-3.5 text-sm text-slate-900",
@@ -182,6 +183,8 @@ export function TeacherClassesPage() {
           </button>
         )}
       </header>
+
+      <VerifyEmailNotice className="mb-8" />
 
       {formOpen && (
         <form onSubmit={handleCreate} className="glass-moon mb-10 w-full p-8">

@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { mediaUrl } from "@/utils/helpers";
 import type { Category, Quiz } from "@/api/types";
 import { QuestionEditorCard } from "@/components/quiz/QuestionEditorCard";
+import { VerifyEmailNotice } from "@/components/VerifyEmailNotice";
 import {
   DIFFICULTIES,
   QUIZ_LANGUAGES,
@@ -399,6 +400,8 @@ export function QuizEditorPage() {
           </Button>
         </div>
       </header>
+
+      <VerifyEmailNotice className="mb-6" />
 
       {notice && <Alert color="success" className="mb-6">{notice}</Alert>}
       {error && <Alert color="failure" className="mb-6">{error}</Alert>}
