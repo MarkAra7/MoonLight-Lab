@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
             'teacher' => \App\Http\Middleware\TeacherMiddleware::class,
             'optional.sanctum' => \App\Http\Middleware\OptionalSanctum::class,
+            'verified.email' => \App\Http\Middleware\EnsureEmailIsVerified::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

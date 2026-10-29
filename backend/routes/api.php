@@ -57,21 +57,21 @@ Route::prefix('v1')->group(function () {
         Route::delete('/media/{media}', [MediaController::class, 'destroy']);
 
         Route::get('/my-quizzes', [QuizController::class, 'myQuizzes']);
-        Route::post('/quizzes', [QuizController::class, 'store']);
+        Route::post('/quizzes', [QuizController::class, 'store'])->middleware('verified.email');
         Route::put('/quizzes/{quiz}', [QuizController::class, 'update']);
         Route::delete('/quizzes/{quiz}', [QuizController::class, 'destroy']);
 
-        Route::post('/quizzes/import-json', [AiQuizController::class, 'import']);
+        Route::post('/quizzes/import-json', [AiQuizController::class, 'import'])->middleware('verified.email');
 
         Route::get('/quizzes/{quiz}/questions', [QuestionController::class, 'index']);
-        Route::post('/quizzes/{quiz}/questions', [QuestionController::class, 'store']);
+        Route::post('/quizzes/{quiz}/questions', [QuestionController::class, 'store'])->middleware('verified.email');
         Route::put('/quizzes/{quiz}/questions/reorder', [QuestionController::class, 'reorder']);
         Route::get('/questions/{question}', [QuestionController::class, 'show']);
         Route::put('/questions/{question}', [QuestionController::class, 'update']);
         Route::delete('/questions/{question}', [QuestionController::class, 'destroy']);
 
         Route::get('/questions/{question}/answers', [AnswerController::class, 'index']);
-        Route::post('/questions/{question}/answers', [AnswerController::class, 'store']);
+        Route::post('/questions/{question}/answers', [AnswerController::class, 'store'])->middleware('verified.email');
         Route::get('/answers/{answer}', [AnswerController::class, 'show']);
         Route::put('/answers/{answer}', [AnswerController::class, 'update']);
         Route::delete('/answers/{answer}', [AnswerController::class, 'destroy']);
@@ -110,7 +110,7 @@ Route::prefix('v1')->group(function () {
     Route::delete('/parties/{party:party_code}/leave', [PartyController::class, 'leave'])->middleware('optional.sanctum');
 
     Route::middleware(['auth:sanctum'])->group(function () {
-        Route::post('/parties', [PartyController::class, 'store']);
+        Route::post('/parties', [PartyController::class, 'store'])->middleware('verified.email');
         Route::post('/parties/{party:party_code}/start', [PartyController::class, 'start']);
         Route::post('/parties/{party:party_code}/next', [PartyController::class, 'next']);
         Route::delete('/parties/{party:party_code}/players/{player}', [PartyController::class, 'kick']);
@@ -124,7 +124,7 @@ Route::prefix('v1')->group(function () {
 
     Route::middleware(['auth:sanctum', 'teacher'])->group(function () {
         Route::get('/teacher/classes', [ClassController::class, 'index']);
-        Route::post('/teacher/classes', [ClassController::class, 'store']);
+        Route::post('/teacher/classes', [ClassController::class, 'store'])->middleware('verified.email');
         Route::get('/teacher/classes/{class}', [ClassController::class, 'show']);
         Route::put('/teacher/classes/{class}', [ClassController::class, 'update']);
         Route::delete('/teacher/classes/{class}', [ClassController::class, 'destroy']);
@@ -138,7 +138,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/teacher/classes/{class}/reject/{student}', [ClassController::class, 'reject']);
 
         Route::get('/teacher/assignments', [AssignmentController::class, 'index']);
-        Route::post('/teacher/assignments', [AssignmentController::class, 'store']);
+        Route::post('/teacher/assignments', [AssignmentController::class, 'store'])->middleware('verified.email');
         Route::get('/teacher/assignments/{assignment}', [AssignmentController::class, 'show']);
         Route::put('/teacher/assignments/{assignment}', [AssignmentController::class, 'update']);
         Route::delete('/teacher/assignments/{assignment}', [AssignmentController::class, 'destroy']);
