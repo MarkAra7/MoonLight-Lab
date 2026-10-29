@@ -132,13 +132,22 @@ export function MyQuizzesPage() {
               <div key={quiz.quiz_id} className="flex flex-col">
                 <div className="mb-2.5 flex items-center justify-between gap-3">
                   <StatusBadge status={quiz.quiz_status?.status} />
-                  <Link
-                    to={`/quizzes/${quiz.quiz_id}/edit`}
-                    className={editLinkClasses}
-                    aria-label={`Edit ${quiz.title}`}
-                  >
-                    Edit
-                  </Link>
+                  <div className="flex items-center gap-2">
+                    <Link
+                      to={`/quizzes/${quiz.quiz_id}/stats`}
+                      className={editLinkClasses}
+                      aria-label={`View statistics for ${quiz.title}`}
+                    >
+                      Stats
+                    </Link>
+                    <Link
+                      to={`/quizzes/${quiz.quiz_id}/edit`}
+                      className={editLinkClasses}
+                      aria-label={`Edit ${quiz.title}`}
+                    >
+                      Edit
+                    </Link>
+                  </div>
                 </div>
                 <div className="flex flex-1">
                   <QuizCard quiz={quiz} showAuthorLink={false} />

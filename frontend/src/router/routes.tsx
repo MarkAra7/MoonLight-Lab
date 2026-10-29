@@ -13,6 +13,7 @@ import { MyQuizzesPage } from "@/pages/quiz/MyQuizzesPage";
 import { QuizBrowsePage } from "@/pages/quiz/QuizBrowsePage";
 import { QuizEditorPage } from "@/pages/quiz/QuizEditorPage";
 import { QuizPlayPage } from "@/pages/quiz/QuizPlayPage";
+import { QuizStatsPage } from "@/pages/quiz/QuizStatsPage";
 import ShowQ from "@/pages/quiz/ShowQ";
 import { JoinPartyPage } from "@/pages/party/JoinPartyPage";
 import { PartyRoomPage } from "@/pages/party/PartyRoomPage";
@@ -52,5 +53,6 @@ export const routes: AppRoute[] = [
   { path: "/teacher/assignments/:id", element: <TeacherAssignmentResultsPage /> },
   { path: "/quizzes/:quizId/edit", element: <QuizEditorPage /> },
   { path: "/quizzes/:quizId/play", element: <QuizPlayPage /> },
+  { path: "/quizzes/:quizId/stats", element: <QuizStatsPage /> },
   { path: "/quizzes/:quizId", element: <ShowQ /> },
 ];
