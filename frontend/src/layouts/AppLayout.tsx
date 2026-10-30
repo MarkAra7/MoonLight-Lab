@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { Suspense, useState, type FormEvent } from "react";
 import { Link, NavLink, Outlet, useNavigate, useSearchParams } from "react-router-dom";
 import { Avatar, Dropdown, DropdownDivider, DropdownHeader, DropdownItem } from "flowbite-react";
 import { useAuth } from "@/context/AuthContext";
@@ -186,7 +186,19 @@ export function AppLayout() {
 
       <main className="flex w-full flex-1 flex-col items-center">
         <div className="flex w-full max-w-[2000px] flex-col items-center px-4 py-12 sm:px-6 lg:px-8">
-          <Outlet />
+          <Suspense
+            fallback={
+              <div className="flex w-full justify-center py-24">
+                <div
+                  role="status"
+                  aria-label="Loading page"
+                  className="h-8 w-8 animate-spin rounded-full border-4 border-sky-500 border-t-transparent"
+                />
+              </div>
+            }
+          >
+            <Outlet />
+          </Suspense>
         </div>
       </main>
 

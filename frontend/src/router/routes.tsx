@@ -1,28 +1,30 @@
 import type { ReactNode } from "react";
-import { HomePage } from "@/pages/HomePage";
-import { LoginPage } from "@/pages/auth/LoginPage";
-import { RegisterPage } from "@/pages/auth/RegisterPage";
-import { ForgotPasswordPage } from "@/pages/auth/ForgotPasswordPage";
-import { ResetPasswordPage } from "@/pages/auth/ResetPasswordPage";
-import { AdminUsersPage } from "@/pages/admin/AdminUsersPage";
-import { VerifyEmailPage } from "@/pages/auth/VerifyEmailPage";
-import { SettingsPage } from "@/pages/settings/SettingsPage";
-import { UserProfilePage } from "@/pages/profile/UserProfilePage";
-import { SearchPage } from "@/pages/search/SearchPage";
-import { MyQuizzesPage } from "@/pages/quiz/MyQuizzesPage";
-import { QuizBrowsePage } from "@/pages/quiz/QuizBrowsePage";
-import { QuizEditorPage } from "@/pages/quiz/QuizEditorPage";
-import { QuizPlayPage } from "@/pages/quiz/QuizPlayPage";
-import { QuizStatsPage } from "@/pages/quiz/QuizStatsPage";
-import ShowQ from "@/pages/quiz/ShowQ";
-import { JoinPartyPage } from "@/pages/party/JoinPartyPage";
-import { PartyRoomPage } from "@/pages/party/PartyRoomPage";
-import { JoinClassPage } from "@/pages/classes/JoinClassPage";
-import { MyClassesPage } from "@/pages/classes/MyClassesPage";
-import { MyClassDetailPage } from "@/pages/classes/MyClassDetailPage";
-import { TeacherClassesPage } from "@/pages/classes/TeacherClassesPage";
-import { TeacherClassDetailPage } from "@/pages/classes/TeacherClassDetailPage";
-import { TeacherAssignmentResultsPage } from "@/pages/classes/TeacherAssignmentResultsPage";
+import {
+  AdminUsersPage,
+  ForgotPasswordPage,
+  HomePage,
+  JoinClassPage,
+  JoinPartyPage,
+  LoginPage,
+  MyClassDetailPage,
+  MyClassesPage,
+  MyQuizzesPage,
+  PartyRoomPage,
+  QuizBrowsePage,
+  QuizEditorPage,
+  QuizPlayPage,
+  QuizStatsPage,
+  RegisterPage,
+  ResetPasswordPage,
+  SearchPage,
+  SettingsPage,
+  ShowQ,
+  TeacherAssignmentResultsPage,
+  TeacherClassDetailPage,
+  TeacherClassesPage,
+  UserProfilePage,
+  VerifyEmailPage,
+} from "@/router/lazyPages";
 
 export interface AppRoute {
   path: string;
