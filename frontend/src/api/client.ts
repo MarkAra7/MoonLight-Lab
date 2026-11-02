@@ -37,7 +37,23 @@ apiClient.interceptors.response.use(
 );
 
 export function getErrorMessage(error: unknown, fallback = "Something went wrong."): string {
-  const data = (error as { response?: { data?: { message?: string } } } | null | undefined)?.response?.data;
+  const data = (
+    error as
+      | { response?: { data?: { message?: string; errors?: Record<string, unknown> } } }
+      | null
+      | undefined
+  )?.response?.data;
+
+  // Laravel sends field errors next to a generic "The given data was invalid."
+  // message; the first field error is always more useful to the user.
+  if (data?.errors && typeof data.errors === "object") {
+    for (const value of Object.values(data.errors)) {
+      if (Array.isArray(value) && typeof value[0] === "string" && value[0].trim()) {
+        return value[0];
+      }
+    }
+  }
+
   return data?.message ?? fallback;
 }
 
