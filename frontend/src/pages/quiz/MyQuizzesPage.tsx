@@ -23,6 +23,9 @@ function StatusBadge({ status }: { status?: string | null }) {
 const newQuizButtonClasses =
   "inline-flex items-center gap-2 rounded-xl bg-sky-600 px-5 py-2.5 text-sm font-bold text-white no-underline transition-colors hover:bg-sky-500 dark:bg-sky-400 dark:text-slate-900 dark:hover:bg-sky-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 dark:focus-visible:ring-sky-400 dark:focus-visible:ring-offset-moon-dark";
 
+const importButtonClasses =
+  "inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-700 no-underline transition-colors hover:border-sky-500/30 hover:bg-sky-500/5 hover:text-sky-600 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300 dark:hover:border-sky-500/30 dark:hover:text-sky-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:focus-visible:ring-sky-400";
+
 const editLinkClasses =
   "rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 no-underline transition-colors hover:border-sky-500/30 hover:bg-sky-500/5 hover:text-sky-600 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300 dark:hover:border-sky-500/30 dark:hover:text-sky-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:focus-visible:ring-sky-400";
 
@@ -98,12 +101,24 @@ export function MyQuizzesPage() {
             {meta.total} quiz{meta.total === 1 ? "" : "zes"} created by you.
           </p>
         </div>
-        <Link to="/quizzes/new" className={newQuizButtonClasses}>
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-          </svg>
-          New quiz
-        </Link>
+        <div className="flex flex-wrap items-center gap-3">
+          <Link to="/quizzes/import" className={importButtonClasses}>
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M12 3v13.5m0 0 4.5-4.5M12 16.5l-4.5-4.5"
+              />
+            </svg>
+            Import JSON
+          </Link>
+          <Link to="/quizzes/new" className={newQuizButtonClasses}>
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            New quiz
+          </Link>
+        </div>
       </header>
 
       <VerifyEmailNotice className="mb-8" />
@@ -126,6 +141,12 @@ export function MyQuizzesPage() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
             </svg>
             Create your first quiz
+          </Link>
+          <Link
+            to="/quizzes/import"
+            className="mt-4 block text-sm font-bold text-sky-600 no-underline hover:text-sky-500 dark:text-sky-400 dark:hover:text-sky-300"
+          >
+            Or import a quiz from JSON
           </Link>
         </div>
       ) : (

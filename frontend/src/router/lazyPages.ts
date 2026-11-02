@@ -51,6 +51,9 @@ export const QuizBrowsePage = lazy(() =>
 export const QuizEditorPage = lazy(() =>
   import("@/pages/quiz/QuizEditorPage").then((module) => ({ default: module.QuizEditorPage }))
 );
+export const ImportQuizPage = lazy(() =>
+  import("@/pages/quiz/ImportQuizPage").then((module) => ({ default: module.ImportQuizPage }))
+);
 export const QuizPlayPage = lazy(() =>
   import("@/pages/quiz/QuizPlayPage").then((module) => ({ default: module.QuizPlayPage }))
 );

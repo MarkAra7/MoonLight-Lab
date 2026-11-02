@@ -111,6 +111,36 @@ export interface QuizStats {
   }[];
 }
 
+export interface ImportQuizAnswerPayload {
+  answer_text: string;
+  is_correct: boolean;
+  display_order?: number;
+}
+
+export interface ImportQuizQuestionPayload {
+  question_text: string;
+  question_type: string;
+  display_order?: number;
+  answers?: ImportQuizAnswerPayload[];
+  correct_text?: string;
+  match_mode?: "exact" | "case_insensitive" | "partial";
+  config?: {
+    content?: string;
+    correct_text?: string;
+  };
+}
+
+export interface ImportQuizPayload {
+  title: string;
+  description?: string | null;
+  category_id?: string | null;
+  is_public?: boolean;
+  difficulty?: "easy" | "medium" | "hard" | null;
+  time_limit?: number | null;
+  language?: string | null;
+  questions: ImportQuizQuestionPayload[];
+}
+
 export const quizApi = {
   list: (params?: QuizListParams) => apiClient.get<Paged<Quiz>>("/quizzes", { params }),
   show: (id: number | string) => apiClient.get<Quiz>(`/quizzes/${id}`),
@@ -122,7 +152,7 @@ export const quizApi = {
   create: (payload: QuizPayload) => apiClient.post<Quiz>("/quizzes", payload),
   update: (id: number | string, payload: Partial<QuizPayload>) => apiClient.put<Quiz>(`/quizzes/${id}`, payload),
   remove: (id: number | string) => apiClient.delete(`/quizzes/${id}`),
-  importJson: (payload: unknown) => apiClient.post("/quizzes/import-json", payload),
+  importJson: (payload: ImportQuizPayload) => apiClient.post<Quiz>("/quizzes/import-json", payload),
 
   questions: (quizId: number | string) => apiClient.get<Question[]>(`/quizzes/${quizId}/questions`),
   addQuestion: (quizId: number | string, payload: QuestionPayload) =>
