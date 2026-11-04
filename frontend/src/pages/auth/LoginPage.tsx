@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { Label, Button, Spinner, Alert } from "flowbite-react";
 import { useAuth } from "@/context/AuthContext";
 import { getErrorMessage } from "@/api";
@@ -73,6 +73,9 @@ export function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
+
+  const notice = (location.state as { notice?: string } | null)?.notice;
 
   const rawRedirect = searchParams.get("redirect");
   const redirect = rawRedirect && rawRedirect.startsWith("/") && !rawRedirect.startsWith("//") ? rawRedirect : "/";
@@ -103,6 +106,12 @@ export function LoginPage() {
         <h1 className="mb-4 text-2xl font-bold text-slate-900 dark:text-white">
           Log in
         </h1>
+
+        {notice && (
+          <Alert color="info" className="mb-4">
+            {notice}
+          </Alert>
+        )}
 
         {error && (
           <Alert color="failure" className="mb-4">

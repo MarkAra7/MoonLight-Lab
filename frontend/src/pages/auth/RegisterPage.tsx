@@ -110,7 +110,12 @@ export function RegisterPage() {
     setSubmitting(true);
     try {
       await register({ ...form, role: effectiveRole });
-      navigate("/login");
+      navigate("/login", {
+        state: {
+          notice:
+            "Account created. Check your inbox for the verification link to unlock content creation.",
+        },
+      });
     } catch (err) {
       setError(getErrorMessage(err, "Registration failed."));
     } finally {

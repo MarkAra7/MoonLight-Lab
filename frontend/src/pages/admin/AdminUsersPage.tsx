@@ -114,7 +114,7 @@ export function AdminUsersPage() {
 
     setCreating(true);
     try {
-      await adminApi.createUser({
+      const { data } = await adminApi.createUser({
         first_name: form.first_name.trim(),
         last_name: form.last_name.trim(),
         email: form.email.trim(),
@@ -122,7 +122,9 @@ export function AdminUsersPage() {
         password_confirmation: form.password_confirmation,
         role_id: Number(form.role_id),
       });
-      setNotice("User created.");
+      setNotice(
+        `User created as ${data.username}. A verification email was sent to ${data.email}.`
+      );
       setForm(emptyForm);
       setShowForm(false);
       setPage(1);
