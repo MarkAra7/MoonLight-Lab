@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Mail\VerificationCodeMail;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class EmailVerification extends Model
@@ -43,6 +45,18 @@ class EmailVerification extends Model
             'user_id' => $user->id,
             'expires_at' => now()->addMinutes(config('app.verification.expire', 15)),
         ]);
+    }
+
+    /**
+     * Creates a fresh token and emails the verification link. Registration,
+     * admin-created accounts and the resend button all share this path so the
+     * link format cannot drift between them.
+     */
+    public static function sendLinkTo(User $user): void
+    {
+        $verification = static::generateFor($user);
+
+        Mail::to($user)->send(new VerificationCodeMail($user, $verification->id));
     }
 
     public function isValid(): bool

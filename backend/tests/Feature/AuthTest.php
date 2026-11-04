@@ -2,11 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Mail\VerificationCodeMail;
+use App\Models\EmailVerification;
 use App\Models\User;
 use App\Notifications\PasswordReset as PasswordResetNotification;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
@@ -38,6 +41,31 @@ class AuthTest extends TestCase
         $this->assertDatabaseHas('users', [
             'email' => 'test@example.com',
         ]);
+    }
+
+    public function test_registration_sends_a_verification_link(): void
+    {
+        Mail::fake();
+
+        $this->postJson('/api/v1/register', [
+            'first_name' => 'Test',
+            'last_name' => 'User',
+            'username' => 'testuser',
+            'email' => 'test@example.com',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+            'role' => 'student',
+        ])->assertStatus(201);
+
+        $user = User::where('email', 'test@example.com')->firstOrFail();
+
+        Mail::assertSent(VerificationCodeMail::class, function (VerificationCodeMail $mail) use ($user) {
+            return $mail->hasTo('test@example.com')
+                && $mail->user->is($user)
+                && EmailVerification::whereKey($mail->token)->where('user_id', $user->id)->exists();
+        });
+
+        $this->assertNull($user->email_verified_at);
     }
 
     public function test_user_can_login()

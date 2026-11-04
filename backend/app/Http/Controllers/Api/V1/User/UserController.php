@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Http\Resources\UserResource;
+use App\Models\EmailVerification;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -32,7 +33,16 @@ class UserController extends Controller
 
     public function store(StoreUserRequest $request)
     {
-        $user = User::create($request->validated());
+        $data = $request->validated();
+        $data['username'] = User::suggestUsername(
+            $data['first_name'],
+            $data['last_name'],
+            $data['email'],
+        );
+
+        $user = User::create($data);
+
+        EmailVerification::sendLinkTo($user);
 
         return UserResource::make($user)->response()->setStatusCode(201);
     }

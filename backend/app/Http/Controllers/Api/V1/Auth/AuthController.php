@@ -5,13 +5,11 @@ namespace App\Http\Controllers\Api\V1\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
-use App\Mail\VerificationCodeMail;
 use App\Models\EmailVerification;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
@@ -33,6 +31,8 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
             'role_id' => $role->id,
         ]);
+
+        EmailVerification::sendLinkTo($user);
 
         return response()->json([
             'user' => $user,
@@ -81,9 +81,7 @@ class AuthController extends Controller
             return response()->json(['message' => 'Email already verified.']);
         }
 
-        $verification = EmailVerification::generateFor($user);
-
-        Mail::to($user)->send(new VerificationCodeMail($user, $verification->id));
+        EmailVerification::sendLinkTo($user);
 
         return response()->json(['message' => 'Verification email sent.']);
     }

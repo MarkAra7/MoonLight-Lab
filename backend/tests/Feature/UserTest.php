@@ -2,10 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Mail\VerificationCodeMail;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class UserTest extends TestCase
@@ -97,6 +99,51 @@ class UserTest extends TestCase
         return User::factory()->create([
             'role_id' => Role::where('title', 'admin')->first()->id,
         ]);
+    }
+
+    public function test_admin_can_create_a_user(): void
+    {
+        Mail::fake();
+
+        User::factory()->create(['username' => 'new_teacher']);
+
+        $response = $this->actingAs($this->admin(), 'sanctum')
+            ->postJson('/api/v1/users', [
+                'first_name' => 'New',
+                'last_name' => 'Teacher',
+                'email' => 'new.teacher@example.com',
+                'password' => 'password',
+                'password_confirmation' => 'password',
+                'role_id' => Role::where('title', 'teacher')->first()->id,
+            ])
+            ->assertStatus(201)
+            ->assertJsonPath('username', 'new_teacher_2')
+            ->assertJsonPath('email', 'new.teacher@example.com');
+
+        Mail::assertSent(VerificationCodeMail::class, fn (VerificationCodeMail $mail) => $mail->hasTo('new.teacher@example.com'));
+
+        $this->assertDatabaseHas('email_verifications', ['user_id' => $response->json('id')]);
+        $this->assertNull(User::where('email', 'new.teacher@example.com')->firstOrFail()->email_verified_at);
+    }
+
+    public function test_non_admin_cannot_create_a_user(): void
+    {
+        $teacher = User::factory()->create([
+            'role_id' => Role::where('title', 'teacher')->first()->id,
+        ]);
+
+        $this->actingAs($teacher, 'sanctum')
+            ->postJson('/api/v1/users', [
+                'first_name' => 'Blocked',
+                'last_name' => 'User',
+                'email' => 'blocked@example.com',
+                'password' => 'password',
+                'password_confirmation' => 'password',
+                'role_id' => Role::where('title', 'student')->first()->id,
+            ])
+            ->assertStatus(403);
+
+        $this->assertDatabaseMissing('users', ['email' => 'blocked@example.com']);
     }
 
     public function test_admin_can_search_users_by_email_or_username(): void

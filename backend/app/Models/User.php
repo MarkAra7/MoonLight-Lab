@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
 use App\Notifications\PasswordReset as PasswordResetNotification;
@@ -68,6 +69,31 @@ class User extends Authenticatable
     public function role()
     {
         return $this->belongsTo(Role::class);
+    }
+
+    /**
+     * Builds a unique username for accounts created without one, such as the
+     * users an admin creates. Soft-deleted rows keep their username in the
+     * unique index, so they must be considered too.
+     */
+    public static function suggestUsername(string $firstName, string $lastName, string $email): string
+    {
+        $base = Str::slug(trim($firstName.' '.$lastName), '_');
+
+        if ($base === '') {
+            $base = Str::slug(Str::before($email, '@'), '_');
+        }
+
+        $base = Str::limit($base, 40, '') ?: 'user';
+
+        $username = $base;
+        $suffix = 2;
+
+        while (static::withTrashed()->where('username', $username)->exists()) {
+            $username = $base.'_'.$suffix++;
+        }
+
+        return $username;
     }
 
     public function avatar()
