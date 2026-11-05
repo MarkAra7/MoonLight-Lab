@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Assignment;
 use App\Models\Classes;
 use App\Models\Notification;
+use App\Models\Quiz;
 use App\Models\QuizAttempt;
 use Illuminate\Http\Request;
 
@@ -37,6 +38,11 @@ class AssignmentController extends Controller
 
         $class = Classes::findOrFail($data['class_id']);
         if ($class->teacher_id !== $request->user()->id) abort(403);
+
+        $quiz = Quiz::findOrFail($data['quiz_id']);
+        // An assignment grants the whole class access to the quiz, so a teacher
+        // must not be able to use it to expose another author's private draft.
+        if ($quiz->author_id !== $request->user()->id) abort(403);
 
         $assignment = Assignment::create([
             'class_id' => $data['class_id'],
