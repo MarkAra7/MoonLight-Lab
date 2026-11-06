@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreQuizRequest;
 use App\Http\Requests\UpdateQuizRequest;
 use App\Http\Resources\QuizResource;
+use App\Models\Answer;
+use App\Models\Question;
 use App\Models\Quiz;
 use App\Models\QuizStatus;
 use Illuminate\Http\Request;
@@ -67,6 +69,63 @@ class QuizController extends Controller
             ->where('author_id', $request->user()->id)
             ->latest()
             ->paginate($this->perPage($request)));
+    }
+
+    /**
+     * Serialise a quiz into the same JSON format that /quizzes/import-json
+     * accepts, so a teacher can back up or move a quiz between installations.
+     */
+    public function export(Quiz $quiz)
+    {
+        // Only the author may export: the payload contains the correct answers.
+        Gate::authorize('update', $quiz);
+
+        $quiz->load([
+            'questions' => fn ($query) => $query->orderBy('display_order'),
+            'questions.answers' => fn ($query) => $query->orderBy('display_order'),
+        ]);
+
+        $choiceTypes = ['single_choice', 'multiple_choice', 'true_false'];
+
+        $questions = $quiz->questions->map(function (Question $question) use ($choiceTypes) {
+            $data = [
+                'question_text' => $question->question_text,
+                'question_type' => $question->question_type,
+                'display_order' => $question->display_order,
+            ];
+
+            if (in_array($question->question_type, $choiceTypes, true)) {
+                $data['answers'] = $question->answers->map(fn (Answer $answer) => [
+                    'answer_text' => $answer->answer_text,
+                    'is_correct' => (bool) $answer->is_correct,
+                    'display_order' => $answer->display_order,
+                ])->values()->all();
+            }
+
+            if ($question->question_type === 'text_input') {
+                $data['correct_text'] = $question->correct_text;
+                $data['match_mode'] = $question->match_mode;
+            }
+
+            if ($question->question_type === 'theory') {
+                $data['config'] = ['content' => $question->config['content'] ?? ''];
+            }
+
+            return $data;
+        })->values()->all();
+
+        return response()->json([
+            'format' => 'moonlight-quiz',
+            'version' => 1,
+            'title' => $quiz->title,
+            'description' => $quiz->description,
+            'category_id' => $quiz->category_id,
+            'difficulty' => $quiz->difficulty,
+            'time_limit' => $quiz->time_limit,
+            'language' => $quiz->language,
+            'is_public' => (bool) $quiz->is_public,
+            'questions' => $questions,
+        ]);
     }
 
     public function update(UpdateQuizRequest $request, Quiz $quiz)

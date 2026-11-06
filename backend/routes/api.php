@@ -60,6 +60,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/quizzes', [QuizController::class, 'store'])->middleware('verified.email');
         Route::put('/quizzes/{quiz}', [QuizController::class, 'update']);
         Route::delete('/quizzes/{quiz}', [QuizController::class, 'destroy']);
+        Route::get('/quizzes/{quiz}/export', [QuizController::class, 'export']);
 
         Route::post('/quizzes/import-json', [AiQuizController::class, 'import'])->middleware('verified.email');
 
