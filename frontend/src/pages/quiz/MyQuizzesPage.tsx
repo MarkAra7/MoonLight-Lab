@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Badge } from "flowbite-react";
+import { Alert, Badge } from "flowbite-react";
 import { getErrorMessage } from "@/api";
 import { quizApi } from "@/api/quiz";
 import { useAuth } from "@/context/AuthContext";
@@ -20,6 +20,14 @@ function StatusBadge({ status }: { status?: string | null }) {
   );
 }
 
+function fileSlug(title: string): string {
+  const slug = title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return slug || "quiz";
+}
+
 const newQuizButtonClasses =
   "inline-flex items-center gap-2 rounded-xl bg-sky-600 px-5 py-2.5 text-sm font-bold text-white no-underline transition-colors hover:bg-sky-500 dark:bg-sky-400 dark:text-slate-900 dark:hover:bg-sky-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 dark:focus-visible:ring-sky-400 dark:focus-visible:ring-offset-moon-dark";
 
@@ -37,6 +45,8 @@ export function MyQuizzesPage() {
   const [page, setPage] = useState(1);
   const [quizzesLoading, setQuizzesLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [exportingId, setExportingId] = useState<string | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -64,6 +74,28 @@ export function MyQuizzesPage() {
       active = false;
     };
   }, [user, page]);
+
+  const handleExport = async (quiz: Quiz) => {
+    const id = String(quiz.quiz_id);
+    setExportError(null);
+    setExportingId(id);
+    try {
+      const { data } = await quizApi.exportJson(quiz.quiz_id);
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${fileSlug(quiz.title)}.json`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setExportError(getErrorMessage(err, "Could not export this quiz."));
+    } finally {
+      setExportingId(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -123,6 +155,12 @@ export function MyQuizzesPage() {
 
       <VerifyEmailNotice className="mb-8" />
 
+      {exportError && (
+        <Alert color="failure" className="mb-6">
+          {exportError}
+        </Alert>
+      )}
+
       {quizzesLoading ? (
         <div className="flex justify-center py-24">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-sky-500 border-t-transparent" />
@@ -171,6 +209,16 @@ export function MyQuizzesPage() {
                     >
                       Edit
                     </Link>
+                    <button
+                      type="button"
+                      onClick={() => handleExport(quiz)}
+                      disabled={exportingId === String(quiz.quiz_id)}
+                      className={`${editLinkClasses} disabled:cursor-wait disabled:opacity-60`}
+                      aria-label={`Export ${quiz.title} as JSON`}
+                      title="Download this quiz as JSON"
+                    >
+                      {exportingId === String(quiz.quiz_id) ? "Exporting…" : "Export"}
+                    </button>
                   </div>
                 </div>
                 <div className="flex flex-1">

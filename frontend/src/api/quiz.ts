@@ -141,6 +141,12 @@ export interface ImportQuizPayload {
   questions: ImportQuizQuestionPayload[];
 }
 
+/** A quiz serialised by the backend in the same shape importJson accepts. */
+export interface ExportQuizPayload extends ImportQuizPayload {
+  format: string;
+  version: number;
+}
+
 export const quizApi = {
   list: (params?: QuizListParams) => apiClient.get<Paged<Quiz>>("/quizzes", { params }),
   show: (id: number | string) => apiClient.get<Quiz>(`/quizzes/${id}`),
@@ -153,6 +159,7 @@ export const quizApi = {
   update: (id: number | string, payload: Partial<QuizPayload>) => apiClient.put<Quiz>(`/quizzes/${id}`, payload),
   remove: (id: number | string) => apiClient.delete(`/quizzes/${id}`),
   importJson: (payload: ImportQuizPayload) => apiClient.post<Quiz>("/quizzes/import-json", payload),
+  exportJson: (id: number | string) => apiClient.get<ExportQuizPayload>(`/quizzes/${id}/export`),
 
   questions: (quizId: number | string) => apiClient.get<Question[]>(`/quizzes/${quizId}/questions`),
   addQuestion: (quizId: number | string, payload: QuestionPayload) =>
