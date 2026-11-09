@@ -24,6 +24,7 @@ class Quiz extends Model
         'language',
         'difficulty',
         'time_limit',
+        'play_mode',
         'views',
         'average_score',
         'config',

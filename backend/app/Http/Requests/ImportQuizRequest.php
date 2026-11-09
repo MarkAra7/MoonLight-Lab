@@ -23,6 +23,7 @@ class ImportQuizRequest extends FormRequest
             'is_public' => ['nullable', 'boolean'],
             'difficulty' => ['nullable', 'string', 'in:easy,medium,hard'],
             'time_limit' => ['nullable', 'integer', 'min:0'],
+            'play_mode' => ['nullable', 'string', 'in:all,one_by_one'],
             'language' => ['nullable', 'string', 'max:50'],
             'questions' => ['required', 'array', 'min:1'],
             'questions.*.question_text' => ['required', 'string'],

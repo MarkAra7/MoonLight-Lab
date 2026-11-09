@@ -33,6 +33,7 @@ class AiQuizController extends Controller
                     'category_id' => $request->category_id,
                     'difficulty' => $request->difficulty,
                     'time_limit' => $request->time_limit,
+                    'play_mode' => $request->input('play_mode', 'all'),
                     'language' => $request->language ?? 'en',
                     'is_public' => $request->boolean('is_public'),
                 ]);

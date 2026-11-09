@@ -44,6 +44,7 @@ class QuizController extends Controller
             'language' => $request->language ?? 'en',
             'difficulty' => $request->difficulty,
             'time_limit' => $request->time_limit,
+            'play_mode' => $request->input('play_mode', 'all'),
             'is_public' => $request->boolean('is_public'),
         ]);
 
@@ -122,6 +123,7 @@ class QuizController extends Controller
             'category_id' => $quiz->category_id,
             'difficulty' => $quiz->difficulty,
             'time_limit' => $quiz->time_limit,
+            'play_mode' => $quiz->play_mode ?? 'all',
             'language' => $quiz->language,
             'is_public' => (bool) $quiz->is_public,
             'questions' => $questions,

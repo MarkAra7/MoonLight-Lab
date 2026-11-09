@@ -17,6 +17,7 @@ class QuizResource extends JsonResource
             'description' => $this->description,
             'difficulty' => $this->difficulty,
             'time_limit' => $this->time_limit,
+            'play_mode' => $this->play_mode ?? 'all',
             'language' => $this->language,
             'views' => $this->views,
             'average_score' => $this->average_score,

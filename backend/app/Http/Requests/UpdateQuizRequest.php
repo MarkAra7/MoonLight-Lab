@@ -21,6 +21,7 @@ class UpdateQuizRequest extends FormRequest
             'language' => ['nullable', 'string', 'max:50'],
             'difficulty' => ['nullable', 'string', 'in:easy,medium,hard'],
             'time_limit' => ['nullable', 'integer', 'min:0'],
+            'play_mode' => ['sometimes', 'string', 'in:all,one_by_one'],
             'config' => ['nullable', 'array'],
             'status' => ['sometimes', 'string', 'in:draft,published,archived'],
             'is_public' => ['boolean'],
