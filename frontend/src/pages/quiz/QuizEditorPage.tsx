@@ -5,11 +5,12 @@ import { getErrorMessage, mediaApi, miscApi } from "@/api";
 import { quizApi, type QuizPayload } from "@/api/quiz";
 import { useAuth } from "@/context/AuthContext";
 import { mediaUrl } from "@/utils/helpers";
-import type { Category, Quiz } from "@/api/types";
+import type { Category, Quiz, QuizPlayMode } from "@/api/types";
 import { QuestionEditorCard } from "@/components/quiz/QuestionEditorCard";
 import { VerifyEmailNotice } from "@/components/VerifyEmailNotice";
 import {
   DIFFICULTIES,
+  PLAY_MODES,
   QUIZ_LANGUAGES,
   QUIZ_STATUSES,
   buildAnswerPayload,
@@ -74,6 +75,7 @@ export function QuizEditorPage() {
   const [categoryId, setCategoryId] = useState("");
   const [difficulty, setDifficulty] = useState("");
   const [timeLimit, setTimeLimit] = useState("");
+  const [playMode, setPlayMode] = useState<QuizPlayMode>("all");
   const [language, setLanguage] = useState("en");
   const [status, setStatus] = useState("draft");
   const [isPublic, setIsPublic] = useState(true);
@@ -99,6 +101,7 @@ export function QuizEditorPage() {
       setCategoryId("");
       setDifficulty("");
       setTimeLimit("");
+      setPlayMode("all");
       setLanguage("en");
       setStatus("draft");
       setIsPublic(true);
@@ -122,6 +125,7 @@ export function QuizEditorPage() {
       setCategoryId(loaded.category_id ?? "");
       setDifficulty(loaded.difficulty ?? "");
       setTimeLimit(loaded.time_limit ? String(loaded.time_limit) : "");
+      setPlayMode(loaded.play_mode === "one_by_one" ? "one_by_one" : "all");
       setLanguage(loaded.language ?? "en");
       setStatus(loaded.quiz_status?.status ?? "draft");
       setIsPublic(Boolean(loaded.is_public));
@@ -267,6 +271,7 @@ export function QuizEditorPage() {
         language,
         difficulty: difficulty || null,
         time_limit: timeLimit.trim() ? Number(timeLimit) : null,
+        play_mode: playMode,
         status,
         is_public: isPublic,
       };
@@ -586,6 +591,44 @@ export function QuizEditorPage() {
                   onChange={(event) => void handleCoverChange(event)}
                 />
               </div>
+            </div>
+          </div>
+
+          <div>
+            <span className={fieldLabelClasses}>Play style</span>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              {PLAY_MODES.map((mode) => {
+                const selected = playMode === mode.id;
+
+                return (
+                  <label
+                    key={mode.id}
+                    className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors ${linkFocusRing} ${
+                      selected
+                        ? "border-sky-500 bg-sky-50 dark:border-sky-400 dark:bg-sky-400/10"
+                        : "border-slate-200 hover:border-sky-500/30 dark:border-white/10"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="quiz-play-mode"
+                      value={mode.id}
+                      checked={selected}
+                      disabled={saving}
+                      onChange={() => setPlayMode(mode.id)}
+                      className="mt-0.5 h-4 w-4 flex-shrink-0 accent-sky-600 dark:accent-sky-400"
+                    />
+                    <span>
+                      <span className="block text-sm font-bold text-slate-900 dark:text-white">
+                        {mode.label}
+                      </span>
+                      <span className="block text-xs font-medium text-slate-500 dark:text-slate-400">
+                        {mode.description}
+                      </span>
+                    </span>
+                  </label>
+                );
+              })}
             </div>
           </div>
 

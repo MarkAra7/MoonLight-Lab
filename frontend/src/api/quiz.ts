@@ -7,6 +7,7 @@ import type {
   Question,
   Quiz,
   QuizAttemptResult,
+  QuizPlayMode,
   RatingSummary,
 } from "./types";
 
@@ -26,6 +27,7 @@ export interface QuizPayload {
   language?: string | null;
   difficulty?: string | null;
   time_limit?: number | null;
+  play_mode?: QuizPlayMode;
   status?: string;
   is_public?: boolean;
 }

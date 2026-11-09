@@ -51,6 +51,9 @@ export interface QuizAuthor {
   avatar?: Media | null;
 }
 
+/** How the quiz is presented while playing. */
+export type QuizPlayMode = "all" | "one_by_one";
+
 export interface Quiz {
   quiz_id: number;
   title: string;
@@ -67,6 +70,7 @@ export interface Quiz {
   questions_count?: number | null;
   questions?: Question[];
   time_limit?: number | null;
+  play_mode?: QuizPlayMode | null;
   views?: number;
   is_public?: boolean;
   average_score?: number | null;

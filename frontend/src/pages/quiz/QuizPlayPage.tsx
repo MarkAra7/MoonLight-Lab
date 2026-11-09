@@ -55,6 +55,7 @@ export function QuizPlayPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<QuizAttemptResult | null>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   const load = useCallback(async () => {
     if (!quizId) return;
@@ -72,6 +73,7 @@ export function QuizPlayPage() {
       setQuestions(questionsRes.data ?? []);
       setAnswers({});
       setResult(null);
+      setCurrentIndex(0);
       setStartedAt(new Date().toISOString());
     } catch (err) {
       setLoadError(getErrorMessage(err, "Could not load this quiz."));
@@ -86,6 +88,14 @@ export function QuizPlayPage() {
       await load();
     })();
   }, [authLoading, user, quizId, load]);
+
+  const oneAtATime = quiz?.play_mode === "one_by_one";
+
+  useEffect(() => {
+    if (oneAtATime) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [currentIndex, oneAtATime]);
 
   const answeredCount = useMemo(
     () => questions.filter((question) => isAnswered(question, answers[question.question_id])).length,
@@ -137,6 +147,11 @@ export function QuizPlayPage() {
 
     void submit();
   };
+
+  const visibleQuestions = oneAtATime
+    ? questions.slice(currentIndex, currentIndex + 1)
+    : questions;
+  const visibleStartIndex = oneAtATime ? currentIndex : 0;
 
   if (authLoading) return <SpinnerBlock />;
 
@@ -246,11 +261,11 @@ export function QuizPlayPage() {
       ) : (
         <>
           <div className="flex flex-col gap-5">
-            {questions.map((question, index) => (
+            {visibleQuestions.map((question, index) => (
               <QuizQuestionTake
                 key={question.question_id}
                 question={question}
-                position={index + 1}
+                position={visibleStartIndex + index + 1}
                 total={questions.length}
                 value={answers[question.question_id] ?? {}}
                 disabled={submitting}
@@ -259,26 +274,73 @@ export function QuizPlayPage() {
             ))}
           </div>
 
-          <div className="mt-8 flex flex-wrap items-center gap-4">
-            <Button
-              type="button"
-              onClick={handleSubmit}
-              disabled={submitting}
-              className={primaryButtonClasses}
-            >
-              {submitting ? (
-                <>
-                  <Spinner size="sm" className="mr-2" />
-                  Submitting…
-                </>
+          {oneAtATime ? (
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <Button
+                type="button"
+                color="light"
+                onClick={() => setCurrentIndex((index) => Math.max(0, index - 1))}
+                disabled={currentIndex === 0 || submitting}
+                className={secondaryLinkClasses}
+              >
+                Previous
+              </Button>
+
+              {currentIndex < questions.length - 1 ? (
+                <Button
+                  type="button"
+                  onClick={() =>
+                    setCurrentIndex((index) => Math.min(questions.length - 1, index + 1))
+                  }
+                  disabled={submitting}
+                  className={primaryButtonClasses}
+                >
+                  Next question
+                </Button>
               ) : (
-                "Submit answers"
+                <Button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={submitting}
+                  className={primaryButtonClasses}
+                >
+                  {submitting ? (
+                    <>
+                      <Spinner size="sm" className="mr-2" />
+                      Submitting…
+                    </>
+                  ) : (
+                    "Submit answers"
+                  )}
+                </Button>
               )}
-            </Button>
-            <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
-              {answeredCount} of {questions.length} answered
-            </span>
-          </div>
+
+              <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                {answeredCount} of {questions.length} answered
+              </span>
+            </div>
+          ) : (
+            <div className="mt-8 flex flex-wrap items-center gap-4">
+              <Button
+                type="button"
+                onClick={handleSubmit}
+                disabled={submitting}
+                className={primaryButtonClasses}
+              >
+                {submitting ? (
+                  <>
+                    <Spinner size="sm" className="mr-2" />
+                    Submitting…
+                  </>
+                ) : (
+                  "Submit answers"
+                )}
+              </Button>
+              <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                {answeredCount} of {questions.length} answered
+              </span>
+            </div>
+          )}
         </>
       )}
     </div>

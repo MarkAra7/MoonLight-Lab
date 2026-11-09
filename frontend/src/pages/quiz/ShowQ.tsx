@@ -181,6 +181,7 @@ const ShowQ = () => {
 							</span>
 						)}
 						<span>{questionsCount} questions</span>
+						{quiz.play_mode === "one_by_one" && <span>one question at a time</span>}
 						{(quiz.time_limit ?? 0) > 0 && <span>{quiz.time_limit} min</span>}
 						{(quiz.views ?? 0) > 0 && <span>{quiz.views} views</span>}
 						{ratings.count > 0 && (

@@ -65,6 +65,19 @@ export const QUIZ_STATUSES = [
   { id: "archived", label: "Archived — hidden from the browse page" },
 ];
 
+export const PLAY_MODES = [
+  {
+    id: "all",
+    label: "All questions on one page",
+    description: "Players answer the whole quiz in a single scroll.",
+  },
+  {
+    id: "one_by_one",
+    label: "One question at a time",
+    description: "Players move through the quiz question by question.",
+  },
+] as const;
+
 export const QUIZ_LANGUAGES = [
   { id: "en", label: "English" },
   { id: "lv", label: "Latviešu" },
