@@ -21,10 +21,15 @@ const linkButton =
   "inline-flex items-center justify-center rounded-xl bg-sky-600 px-6 py-3 text-sm font-bold text-white no-underline transition-colors hover:bg-sky-500 dark:bg-sky-400 dark:text-slate-900 dark:hover:bg-sky-300";
 
 interface AttemptRow {
+  id: number;
   attempt_number: number;
   score: number;
+  teacher_score?: number | null;
+  final_score: number;
   total: number;
   percentage: number;
+  teacher_feedback?: string | null;
+  graded_at?: string | null;
   completed_at?: string | null;
 }
 
@@ -209,14 +214,17 @@ export function TeacherAssignmentResultsPage() {
 
                 {isOpen && (
                   <div className="mt-5 overflow-x-auto border-t border-slate-200 pt-5 dark:border-white/10">
-                    <table className="w-full min-w-[480px] text-left text-sm">
+                    <table className="w-full min-w-[640px] text-left text-sm">
                       <thead>
                         <tr className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                           <th scope="col" className="pb-2">
                             Attempt
                           </th>
                           <th scope="col" className="pb-2">
-                            Score
+                            Auto
+                          </th>
+                          <th scope="col" className="pb-2">
+                            Final
                           </th>
                           <th scope="col" className="pb-2">
                             Percentage
@@ -224,12 +232,15 @@ export function TeacherAssignmentResultsPage() {
                           <th scope="col" className="pb-2">
                             Completed
                           </th>
+                          <th scope="col" className="pb-2">
+                            <span className="sr-only">Grading</span>
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
                         {row.attempts.map((attempt) => (
                           <tr
-                            key={attempt.attempt_number}
+                            key={attempt.id}
                             className="border-t border-slate-100 dark:border-white/[0.06]"
                           >
                             <td className="py-2.5 font-semibold text-slate-700 dark:text-slate-300">
@@ -238,6 +249,14 @@ export function TeacherAssignmentResultsPage() {
                             <td className="py-2.5 text-slate-600 dark:text-slate-400">
                               {attempt.score}/{attempt.total}
                             </td>
+                            <td className="py-2.5 font-semibold text-slate-700 dark:text-slate-300">
+                              {attempt.final_score}/{attempt.total}
+                              {attempt.teacher_score !== null && attempt.teacher_score !== undefined && (
+                                <Badge color="info" size="xs" className="ml-2 inline-flex">
+                                  manual
+                                </Badge>
+                              )}
+                            </td>
                             <td className="py-2.5 text-slate-600 dark:text-slate-400">
                               {attempt.percentage}%
                             </td>
@@ -245,6 +264,16 @@ export function TeacherAssignmentResultsPage() {
                               {attempt.completed_at
                                 ? formatDate(attempt.completed_at, dateFormat)
                                 : "—"}
+                            </td>
+                            <td className="py-2.5 text-right">
+                              <Link
+                                to={`/teacher/assignments/${payload.assignment.id}/attempts/${attempt.id}`}
+                                className={`inline-flex items-center rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-700 no-underline transition-colors hover:border-sky-500/30 hover:bg-sky-500/5 hover:text-sky-600 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300 dark:hover:border-sky-500/30 dark:hover:text-sky-400 ${linkFocusRing}`}
+                              >
+                                {attempt.teacher_score !== null && attempt.teacher_score !== undefined
+                                  ? "Edit grade"
+                                  : "Grade"}
+                              </Link>
                             </td>
                           </tr>
                         ))}

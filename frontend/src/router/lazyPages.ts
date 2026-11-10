@@ -93,3 +93,8 @@ export const TeacherAssignmentResultsPage = lazy(() =>
     default: module.TeacherAssignmentResultsPage,
   }))
 );
+export const TeacherAttemptGradingPage = lazy(() =>
+  import("@/pages/classes/TeacherAttemptGradingPage").then((module) => ({
+    default: module.TeacherAttemptGradingPage,
+  }))
+);

@@ -24,6 +24,47 @@ export interface ClassLookup {
   teacher_name?: string | null;
 }
 
+export interface GradedAttemptQuestion {
+  question_id: string;
+  question_text: string;
+  question_type: string;
+  scorable: boolean;
+  is_correct: boolean | null;
+  given_answer: string;
+  given_text: string;
+  correct_answer: string;
+  correct_text?: string | null;
+}
+
+export interface GradedAttempt {
+  id: number;
+  attempt_number: number;
+  auto_score: number;
+  teacher_score: number | null;
+  final_score: number;
+  total: number;
+  percentage: number;
+  teacher_feedback?: string | null;
+  graded_at?: string | null;
+  graded_by?: string | null;
+  completed_at?: string | null;
+  student?: {
+    first_name?: string | null;
+    last_name?: string | null;
+    email?: string | null;
+  } | null;
+}
+
+export interface GradedAttemptPayload {
+  attempt: GradedAttempt;
+  questions: GradedAttemptQuestion[];
+}
+
+export interface GradeAttemptPayload {
+  teacher_score: number;
+  teacher_feedback?: string | null;
+}
+
 export const classApi = {
   lookup: (code: string) => apiClient.get<ClassLookup>(`/classes/lookup/${code}`),
   teacherIndex: () => apiClient.get("/teacher/classes"),
@@ -57,4 +98,15 @@ export const classApi = {
     apiClient.put(`/teacher/assignments/${id}`, payload),
   removeAssignment: (id: number | string) => apiClient.delete(`/teacher/assignments/${id}`),
   assignmentResults: (id: number | string) => apiClient.get(`/teacher/assignments/${id}/results`),
+  assignmentAttempt: (id: number | string, attemptId: number | string) =>
+    apiClient.get<GradedAttemptPayload>(`/teacher/assignments/${id}/attempts/${attemptId}`),
+  gradeAssignmentAttempt: (
+    id: number | string,
+    attemptId: number | string,
+    payload: GradeAttemptPayload,
+  ) =>
+    apiClient.put<GradedAttemptPayload>(
+      `/teacher/assignments/${id}/attempts/${attemptId}`,
+      payload,
+    ),
 };
