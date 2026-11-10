@@ -144,6 +144,8 @@ Route::prefix('v1')->group(function () {
         Route::put('/teacher/assignments/{assignment}', [AssignmentController::class, 'update']);
         Route::delete('/teacher/assignments/{assignment}', [AssignmentController::class, 'destroy']);
         Route::get('/teacher/assignments/{assignment}/results', [AssignmentController::class, 'results']);
+        Route::get('/teacher/assignments/{assignment}/attempts/{attempt}', [AssignmentController::class, 'attempt']);
+        Route::put('/teacher/assignments/{assignment}/attempts/{attempt}', [AssignmentController::class, 'gradeAttempt']);
     });
 
 });

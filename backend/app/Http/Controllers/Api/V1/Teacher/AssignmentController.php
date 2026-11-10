@@ -115,18 +115,23 @@ class AssignmentController extends Controller
 
         $results = $attempts->map(function ($studentAttempts, $studentId) {
             $student = $studentAttempts->first()->student;
-            $best = $studentAttempts->sortByDesc('score')->first();
+            $best = $studentAttempts->sortByDesc(fn (QuizAttempt $attempt) => $attempt->finalScore())->first();
             return [
                 'student' => $student,
                 'attempts_count' => $studentAttempts->count(),
-                'best_score' => (float)$best->score,
+                'best_score' => $best->finalScore(),
                 'best_total' => (int)$best->total,
-                'best_percentage' => $best->total > 0 ? round(($best->score / $best->total) * 100, 1) : 0,
+                'best_percentage' => $best->finalPercentage(),
                 'attempts' => $studentAttempts->map(fn($a) => [
+                    'id' => $a->id,
                     'attempt_number' => $a->attempt_number,
                     'score' => (float)$a->score,
+                    'teacher_score' => $a->teacher_score !== null ? (float)$a->teacher_score : null,
+                    'final_score' => $a->finalScore(),
                     'total' => (int)$a->total,
-                    'percentage' => $a->total > 0 ? round(($a->score / $a->total) * 100, 1) : 0,
+                    'percentage' => $a->finalPercentage(),
+                    'teacher_feedback' => $a->teacher_feedback,
+                    'graded_at' => $a->graded_at,
                     'completed_at' => $a->completed_at,
                 ]),
             ];
@@ -136,5 +141,118 @@ class AssignmentController extends Controller
             'assignment' => $assignment->load('quiz:quiz_id,title'),
             'results' => $results,
         ]);
+    }
+
+    /**
+     * Shows one attempt with the student's answers next to the correct ones,
+     * so the teacher has everything needed to grade it manually.
+     */
+    public function attempt(Request $request, Assignment $assignment, QuizAttempt $attempt)
+    {
+        $this->authorizeAttempt($request, $assignment, $attempt);
+
+        return response()->json($this->attemptPayload($assignment, $attempt));
+    }
+
+    /**
+     * Stores the teacher's manual score and feedback. The automatic score is
+     * kept, so the original result is never lost.
+     */
+    public function gradeAttempt(Request $request, Assignment $assignment, QuizAttempt $attempt)
+    {
+        $this->authorizeAttempt($request, $assignment, $attempt);
+
+        $data = $request->validate([
+            'teacher_score' => ['required', 'numeric', 'min:0', 'max:'.$attempt->total],
+            'teacher_feedback' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $attempt->update([
+            'teacher_score' => $data['teacher_score'],
+            'teacher_feedback' => $data['teacher_feedback'] ?? null,
+            'graded_by_id' => $request->user()->id,
+            'graded_at' => now(),
+        ]);
+
+        return response()->json($this->attemptPayload($assignment, $attempt->fresh()));
+    }
+
+    private function authorizeAttempt(Request $request, Assignment $assignment, QuizAttempt $attempt): void
+    {
+        if ($assignment->teacher_id !== $request->user()->id) abort(403);
+
+        if ($attempt->assignment_id !== $assignment->id) abort(404);
+    }
+
+    private function attemptPayload(Assignment $assignment, QuizAttempt $attempt): array
+    {
+        $attempt->load([
+            'student:id,first_name,last_name,email',
+            'grader:id,name,first_name,last_name',
+        ]);
+
+        $questions = $assignment->quiz
+            ->questions()
+            ->with('answers')
+            ->orderBy('display_order')
+            ->get()
+            ->keyBy('question_id');
+
+        $stored = collect($attempt->answers_data['answers'] ?? []);
+        $storedByQuestion = $stored->keyBy('question_id');
+
+        $review = $questions->map(function ($question, $questionId) use ($storedByQuestion) {
+            $row = $storedByQuestion->get($questionId) ?? [];
+            $scorable = $question->question_type !== 'theory';
+
+            $givenIds = array_map('strval', (array) ($row['answer_ids'] ?? []));
+            $givenText = trim((string) ($row['text'] ?? ''));
+
+            return [
+                'question_id' => $question->question_id,
+                'question_text' => $question->question_text,
+                'question_type' => $question->question_type,
+                'scorable' => $scorable,
+                'is_correct' => $row['is_correct'] ?? null,
+                'given_answer' => $this->answerTexts($question, $givenIds),
+                'given_text' => $givenText,
+                'correct_answer' => $question->answers
+                    ->where('is_correct', true)
+                    ->pluck('answer_text')
+                    ->implode(', '),
+                'correct_text' => $question->question_type === 'text_input' ? $question->correct_text : null,
+            ];
+        })->values();
+
+        return [
+            'attempt' => [
+                'id' => $attempt->id,
+                'attempt_number' => $attempt->attempt_number,
+                'auto_score' => (float) $attempt->score,
+                'teacher_score' => $attempt->teacher_score !== null ? (float) $attempt->teacher_score : null,
+                'final_score' => $attempt->finalScore(),
+                'total' => (int) $attempt->total,
+                'percentage' => $attempt->finalPercentage(),
+                'teacher_feedback' => $attempt->teacher_feedback,
+                'graded_at' => $attempt->graded_at,
+                'graded_by' => $attempt->grader?->name,
+                'completed_at' => $attempt->completed_at,
+                'student' => $attempt->student,
+            ],
+            'questions' => $review,
+        ];
+    }
+
+    /** Turns stored answer ids into readable text for the grading screen. */
+    private function answerTexts($question, array $ids): string
+    {
+        if ($ids === []) {
+            return '';
+        }
+
+        return $question->answers
+            ->whereIn('answer_id', $ids)
+            ->pluck('answer_text')
+            ->implode(', ');
     }
 }
