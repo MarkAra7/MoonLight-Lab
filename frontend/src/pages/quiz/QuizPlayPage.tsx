@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { Alert, Button, Spinner } from "flowbite-react";
 import { getErrorMessage } from "@/api";
 import { quizApi } from "@/api/quiz";
@@ -42,8 +42,19 @@ function isAnswered(question: Question, answer: TakeAnswer | undefined): boolean
   return Boolean(answer.answer_id);
 }
 
+/** mm:ss countdown; hours are folded into minutes for very long limits. */
+function formatClock(totalSeconds: number): string {
+  const safe = Math.max(0, Math.floor(totalSeconds));
+  const minutes = Math.floor(safe / 60);
+  const seconds = safe % 60;
+
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+}
+
 export function QuizPlayPage() {
   const { quizId } = useParams<{ quizId: string }>();
+  const [searchParams] = useSearchParams();
+  const assignmentId = searchParams.get("assignment");
   const { user, loading: authLoading } = useAuth();
 
   const [loading, setLoading] = useState(true);
@@ -52,16 +63,23 @@ export function QuizPlayPage() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<Record<string, TakeAnswer>>({});
   const [startedAt, setStartedAt] = useState<string | null>(null);
+  const [attemptToken, setAttemptToken] = useState<string | null>(null);
+  const [deadlineAt, setDeadlineAt] = useState<number | null>(null);
+  const [serverOffsetMs, setServerOffsetMs] = useState(0);
+  const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<QuizAttemptResult | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const autoSubmitted = useRef(false);
+  const submitRef = useRef<(auto?: boolean) => void>(() => {});
 
   const load = useCallback(async () => {
     if (!quizId) return;
 
     setLoading(true);
     setLoadError(null);
+    setError(null);
 
     try {
       const [quizRes, questionsRes] = await Promise.all([
@@ -69,18 +87,30 @@ export function QuizPlayPage() {
         quizApi.questions(quizId),
       ]);
 
+      const startRes = await quizApi.startAttempt(quizId, {
+        assignment_id: assignmentId,
+      });
+
+      const { started_at, server_now, deadline_at, time_limit_seconds, attempt_token } =
+        startRes.data;
+
       setQuiz(quizRes.data);
       setQuestions(questionsRes.data ?? []);
       setAnswers({});
       setResult(null);
       setCurrentIndex(0);
-      setStartedAt(new Date().toISOString());
+      setStartedAt(started_at);
+      setAttemptToken(attempt_token);
+      setServerOffsetMs(server_now ? Date.parse(server_now) - Date.now() : 0);
+      setDeadlineAt(deadline_at ? Date.parse(deadline_at) : null);
+      setRemainingSeconds(time_limit_seconds);
+      autoSubmitted.current = false;
     } catch (err) {
       setLoadError(getErrorMessage(err, "Could not load this quiz."));
     } finally {
       setLoading(false);
     }
-  }, [quizId]);
+  }, [quizId, assignmentId]);
 
   useEffect(() => {
     if (authLoading || !user || !quizId) return;
@@ -105,7 +135,7 @@ export function QuizPlayPage() {
   const setAnswer = (questionId: string, next: TakeAnswer) =>
     setAnswers((prev) => ({ ...prev, [questionId]: next }));
 
-  const submit = async () => {
+  const submit = async (auto = false) => {
     if (!quizId || submitting) return;
 
     setSubmitting(true);
@@ -113,6 +143,8 @@ export function QuizPlayPage() {
 
     try {
       const { data } = await quizApi.submitAttempt(quizId, {
+        assignment_id: assignmentId,
+        attempt_token: attemptToken,
         started_at: startedAt,
         answers: questions.map((question) => {
           const answer = answers[question.question_id] ?? {};
@@ -129,11 +161,46 @@ export function QuizPlayPage() {
       setResult(data);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
-      setError(getErrorMessage(err, "Could not submit your answers."));
+      setError(
+        getErrorMessage(
+          err,
+          auto ? "Time is up, but your answers could not be submitted." : "Could not submit your answers.",
+        ),
+      );
     } finally {
       setSubmitting(false);
     }
   };
+
+  // Keep the interval below calling the newest handler without restarting it
+  // on every keystroke.
+  useEffect(() => {
+    submitRef.current = submit;
+  });
+
+  // Count down against the server deadline, not the length of time this tab
+  // has been open, and submit once when it reaches zero.
+  useEffect(() => {
+    if (deadlineAt === null || result) return;
+
+    const tick = () => {
+      const left = Math.max(
+        0,
+        Math.ceil((deadlineAt - (Date.now() + serverOffsetMs)) / 1000),
+      );
+      setRemainingSeconds(left);
+
+      if (left === 0 && !autoSubmitted.current) {
+        autoSubmitted.current = true;
+        submitRef.current(true);
+      }
+    };
+
+    tick();
+    const timer = window.setInterval(tick, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [deadlineAt, serverOffsetMs, result]);
 
   const handleSubmit = () => {
     const unanswered = questions.length - answeredCount;
@@ -208,6 +275,9 @@ export function QuizPlayPage() {
             <Button type="button" onClick={() => void load()} className={primaryButtonClasses}>
               Try again
             </Button>
+            <Link to={`/my-results/${result.attempt_id}`} className={secondaryLinkClasses}>
+              View my result
+            </Link>
             <Link to={`/quizzes/${quizId}`} className={secondaryLinkClasses}>
               Back to quiz
             </Link>
@@ -231,10 +301,23 @@ export function QuizPlayPage() {
         <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
           {quiz.title}
         </h1>
-        <p className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-400">
-          {questions.length} question{questions.length === 1 ? "" : "s"} · {answeredCount} answered
-          {quiz.time_limit ? ` · ${quiz.time_limit} minute limit` : ""}
-        </p>
+        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm font-medium text-slate-500 dark:text-slate-400">
+          <span>
+            {questions.length} question{questions.length === 1 ? "" : "s"} · {answeredCount} answered
+          </span>
+          {remainingSeconds !== null && (
+            <span
+              className={`rounded-lg border px-2.5 py-1 font-bold tabular-nums ${
+                remainingSeconds <= 30
+                  ? "border-red-300 text-red-600 dark:border-red-500/40 dark:text-red-400"
+                  : "border-slate-200 text-slate-600 dark:border-white/10 dark:text-slate-300"
+              }`}
+              aria-live={remainingSeconds <= 30 ? "polite" : "off"}
+            >
+              {formatClock(remainingSeconds)} left
+            </span>
+          )}
+        </div>
 
         <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-white/10">
           <div

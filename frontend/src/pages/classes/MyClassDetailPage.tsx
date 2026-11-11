@@ -178,12 +178,18 @@ export function MyClassDetailPage() {
                 </div>
 
                 {isOpen && assignment.quiz?.quiz_id !== undefined ? (
-                  <Link
-                    to={`/quizzes/${assignment.quiz.quiz_id}`}
-                    className={`${linkButton} flex-shrink-0`}
-                  >
-                    Take quiz
-                  </Link>
+                  assignment.attempts_remaining === 0 ? (
+                    <span className="flex-shrink-0 rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-bold text-slate-400 dark:border-white/10 dark:text-slate-500">
+                      No attempts left
+                    </span>
+                  ) : (
+                    <Link
+                      to={`/quizzes/${assignment.quiz.quiz_id}/play?assignment=${assignment.id}`}
+                      className={`${linkButton} flex-shrink-0`}
+                    >
+                      Take quiz
+                    </Link>
+                  )
                 ) : null}
               </article>
             );

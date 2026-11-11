@@ -63,7 +63,22 @@ export interface AttemptAnswerPayload {
 export interface SubmitAttemptAnswersPayload {
   assignment_id?: string | null;
   started_at?: string | null;
+  /** Required when the quiz or assignment has a time limit. */
+  attempt_token?: string | null;
   answers: AttemptAnswerPayload[];
+}
+
+export interface StartAttemptPayload {
+  assignment_id?: string | null;
+}
+
+/** What the server clock says about a freshly started (timed) attempt. */
+export interface StartAttemptResult {
+  started_at: string;
+  server_now: string;
+  deadline_at: string | null;
+  time_limit_seconds: number | null;
+  attempt_token: string | null;
 }
 
 export interface RatePayload {
@@ -182,6 +197,9 @@ export const quizApi = {
 
   submitAttempt: (quizId: number | string, payload: SubmitAttemptAnswersPayload) =>
     apiClient.post<QuizAttemptResult>(`/quizzes/${quizId}/attempts`, payload),
+
+  startAttempt: (quizId: number | string, payload: StartAttemptPayload = {}) =>
+    apiClient.post<StartAttemptResult>(`/quizzes/${quizId}/attempts/start`, payload),
 
   rate: (quizId: number | string, payload: RatePayload) => apiClient.post(`/quizzes/${quizId}/ratings`, payload),
   myRating: (quizId: number | string) => apiClient.get<MyRating>(`/quizzes/${quizId}/my-rating`),
