@@ -35,7 +35,7 @@ class StudentClassController extends Controller
             ->get()
             ->map(function ($a) use ($request) {
                 $attempts = $a->attempts()->where('student_id', $request->user()->id)->get();
-                $best = $attempts->sortByDesc('score')->first();
+                $best = $attempts->sortByDesc(fn ($attempt) => $attempt->finalScore())->first();
                 return [
                     'id' => $a->id,
                     'title' => $a->title,
@@ -43,7 +43,7 @@ class StudentClassController extends Controller
                     'max_attempts' => $a->max_attempts,
                     'attempts_made' => $attempts->count(),
                     'attempts_remaining' => $a->max_attempts === 0 ? -1 : max(0, $a->max_attempts - $attempts->count()),
-                    'best_score' => $best ? (float)$best->score : null,
+                    'best_score' => $best ? $best->finalScore() : null,
                     'best_total' => $best ? (int)$best->total : null,
                     'is_open' => $a->isOpen(),
                     'opens_at' => $a->opens_at,
