@@ -78,6 +78,16 @@ export const MyClassDetailPage = lazy(() =>
     default: module.MyClassDetailPage,
   }))
 );
+export const MyResultsPage = lazy(() =>
+  import("@/pages/results/MyResultsPage").then((module) => ({
+    default: module.MyResultsPage,
+  }))
+);
+export const MyResultDetailPage = lazy(() =>
+  import("@/pages/results/MyResultDetailPage").then((module) => ({
+    default: module.MyResultDetailPage,
+  }))
+);
 export const TeacherClassesPage = lazy(() =>
   import("@/pages/classes/TeacherClassesPage").then((module) => ({
     default: module.TeacherClassesPage,

@@ -114,6 +114,8 @@ export interface QuizAttemptReviewQuestion {
   /** null for theory questions, which award no points. */
   is_correct: boolean | null;
   given_answer_ids: string[];
+  /** The chosen options with their text, so old attempts stay readable. */
+  given_answers: QuizAttemptReviewAnswer[];
   given_text: string;
   correct_answers: QuizAttemptReviewAnswer[];
   correct_text: string | null;
@@ -130,6 +132,38 @@ export interface QuizAttemptResult {
   started_at?: string | null;
   completed_at?: string | null;
   questions: QuizAttemptReviewQuestion[];
+}
+
+/** One row of the student's own attempt history. */
+export interface MyAttemptSummary {
+  attempt_id: number;
+  quiz_id: string;
+  quiz_title: string | null;
+  assignment_id: string | null;
+  assignment_title: string | null;
+  attempt_number: number;
+  /** The automatic score. */
+  score: number;
+  /** The teacher's manual score, when the attempt has been graded. */
+  teacher_score: number | null;
+  /** The teacher's score when present, otherwise the automatic score. */
+  final_score: number;
+  total: number;
+  percentage: number;
+  teacher_feedback: string | null;
+  graded_at: string | null;
+  completed_at: string | null;
+}
+
+/** A reopened attempt: the result plus the teacher's manual grade. */
+export interface MyAttemptDetail extends QuizAttemptResult {
+  assignment_id: string | null;
+  assignment_title: string | null;
+  teacher_score: number | null;
+  final_score: number;
+  teacher_feedback: string | null;
+  graded_by: string | null;
+  graded_at: string | null;
 }
 
 export interface Party {

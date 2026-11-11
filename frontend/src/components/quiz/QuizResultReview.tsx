@@ -28,7 +28,11 @@ function ReviewRow({
   const given =
     row.question_type === "text_input"
       ? row.given_text.trim()
-      : optionTexts(question, row.given_answer_ids).join(", ");
+      : question
+        ? optionTexts(question, row.given_answer_ids).join(", ")
+        : row.given_answers
+            .map((answer) => answer.answer_text?.trim() || answer.answer_id)
+            .join(", ");
 
   const correct =
     row.question_type === "text_input"
