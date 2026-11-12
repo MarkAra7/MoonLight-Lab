@@ -20,6 +20,52 @@ class StudentClassController extends Controller
         return response()->json($classes);
     }
 
+    /**
+     * Every assignment from the student's active classes in one list, with the
+     * same attempt maths the class page uses so both views stay consistent.
+     */
+    public function myAssignments(Request $request)
+    {
+        $studentId = $request->user()->id;
+
+        $assignments = Assignment::whereHas('class', function ($query) use ($studentId) {
+            $query->whereHas('students', function ($students) use ($studentId) {
+                $students->where('student_id', $studentId)->where('status', 'active');
+            });
+        })
+            ->with(['class:id,name', 'quiz:quiz_id,title'])
+            ->with(['attempts' => fn ($query) => $query->where('student_id', $studentId)])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $payload = $assignments->map(function (Assignment $assignment) {
+            $attempts = $assignment->attempts;
+            $best = $attempts->sortByDesc(fn ($attempt) => $attempt->finalScore())->first();
+
+            return [
+                'id' => $assignment->id,
+                'title' => $assignment->title,
+                'description' => $assignment->description,
+                'class' => $assignment->class?->only(['id', 'name']),
+                'quiz' => $assignment->quiz,
+                'max_attempts' => $assignment->max_attempts,
+                'attempts_made' => $attempts->count(),
+                'attempts_remaining' => $assignment->max_attempts === 0
+                    ? -1
+                    : max(0, $assignment->max_attempts - $attempts->count()),
+                'best_score' => $best?->finalScore(),
+                'best_total' => $best ? (int) $best->total : null,
+                'best_percentage' => $best?->finalPercentage(),
+                'is_open' => $assignment->isOpen(),
+                'opens_at' => $assignment->opens_at,
+                'due_at' => $assignment->due_at,
+                'time_limit_minutes' => $assignment->time_limit_minutes,
+            ];
+        })->values();
+
+        return response()->json($payload);
+    }
+
     public function classDetail(Request $request, Classes $class)
     {
         $isMember = ClassStudent::where('class_id', $class->id)

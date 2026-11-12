@@ -84,6 +84,7 @@ Route::prefix('v1')->group(function () {
 
         Route::get('/my-classes', [StudentClassController::class, 'myClasses']);
         Route::get('/my-classes/{class}', [StudentClassController::class, 'classDetail']);
+        Route::get('/my-assignments', [StudentClassController::class, 'myAssignments']);
         Route::post('/classes/join', [StudentClassController::class, 'join'])->middleware('throttle:6,1');
         Route::get('/my-attempts', [QuizAttemptController::class, 'myAttempts']);
         Route::get('/my-attempts/{attempt}', [QuizAttemptController::class, 'attempt']);
@@ -146,6 +147,7 @@ Route::prefix('v1')->group(function () {
         Route::put('/teacher/assignments/{assignment}', [AssignmentController::class, 'update']);
         Route::delete('/teacher/assignments/{assignment}', [AssignmentController::class, 'destroy']);
         Route::get('/teacher/assignments/{assignment}/results', [AssignmentController::class, 'results']);
+        Route::get('/teacher/assignments/{assignment}/export', [AssignmentController::class, 'export']);
         Route::get('/teacher/assignments/{assignment}/attempts/{attempt}', [AssignmentController::class, 'attempt']);
         Route::put('/teacher/assignments/{assignment}/attempts/{attempt}', [AssignmentController::class, 'gradeAttempt']);
     });

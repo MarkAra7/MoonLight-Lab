@@ -9,6 +9,7 @@ use App\Models\Notification;
 use App\Models\Quiz;
 use App\Models\QuizAttempt;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class AssignmentController extends Controller
 {
@@ -140,6 +141,95 @@ class AssignmentController extends Controller
         return response()->json([
             'assignment' => $assignment->load('quiz:quiz_id,title'),
             'results' => $results,
+        ]);
+    }
+
+    /**
+     * Downloads the results as a CSV file. Every attempt gets its own row and
+     * enrolled students without attempts are kept as an empty row, so the file
+     * matches the class list instead of silently dropping people.
+     */
+    public function export(Request $request, Assignment $assignment)
+    {
+        if ($assignment->teacher_id !== $request->user()->id) abort(403);
+
+        $assignment->load(['class:id,name', 'quiz:quiz_id,title']);
+
+        $attempts = QuizAttempt::where('assignment_id', $assignment->id)
+            ->with('student:id,first_name,last_name,email')
+            ->orderBy('attempt_number')
+            ->get()
+            ->groupBy('student_id');
+
+        $classStudents = $assignment->class
+            ? $assignment->class->students()
+                ->orderBy('last_name')
+                ->orderBy('first_name')
+                ->get(['users.id', 'users.first_name', 'users.last_name', 'users.email'])
+            : collect();
+
+        // A student may have left the class after submitting, so keep their
+        // attempts in the export instead of losing the grades.
+        $students = $classStudents->keyBy('id')->union(
+            $attempts
+                ->map(fn ($rows) => $rows->first()->student)
+                ->filter()
+                ->keyBy('id')
+        )->sortBy(fn ($student) => mb_strtolower(trim(
+            ($student->last_name ?? '').' '.($student->first_name ?? '')
+        )));
+
+        $callback = function () use ($students, $attempts) {
+            $out = fopen('php://output', 'w');
+            fwrite($out, "\xEF\xBB\xBF");
+            fputcsv($out, [
+                'Student',
+                'Email',
+                'Attempt',
+                'Automatic score',
+                'Teacher score',
+                'Final score',
+                'Total',
+                'Percentage',
+                'Completed at',
+                'Graded at',
+                'Teacher feedback',
+            ]);
+
+            foreach ($students as $student) {
+                $studentAttempts = $attempts->get($student->id, collect());
+                $name = trim(($student->first_name ?? '').' '.($student->last_name ?? ''))
+                    ?: $student->email;
+
+                if ($studentAttempts->isEmpty()) {
+                    fputcsv($out, [$name, $student->email, '', '', '', '', '', '', '', '', '']);
+                    continue;
+                }
+
+                foreach ($studentAttempts as $attempt) {
+                    fputcsv($out, [
+                        $name,
+                        $student->email,
+                        $attempt->attempt_number,
+                        (float) $attempt->score,
+                        $attempt->teacher_score !== null ? (float) $attempt->teacher_score : '',
+                        $attempt->finalScore(),
+                        (int) $attempt->total,
+                        $attempt->finalPercentage(),
+                        $attempt->completed_at?->toDateTimeString() ?? '',
+                        $attempt->graded_at?->toDateTimeString() ?? '',
+                        $attempt->teacher_feedback ?? '',
+                    ]);
+                }
+            }
+
+            fclose($out);
+        };
+
+        $filename = (Str::slug($assignment->title) ?: 'assignment').'-results.csv';
+
+        return response()->streamDownload($callback, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
         ]);
     }
 
