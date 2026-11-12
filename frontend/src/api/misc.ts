@@ -1,5 +1,5 @@
 import apiClient from "./client";
-import type { Category, MyAttemptDetail, MyAttemptSummary, Role } from "./types";
+import type { Category, MyAssignment, MyAttemptDetail, MyAttemptSummary, Role } from "./types";
 
 export interface NotificationItem {
   id: number;
@@ -46,6 +46,7 @@ export const miscApi = {
   markAllRead: () => apiClient.put("/notifications/read-all"),
 
   myAttempts: () => apiClient.get<MyAttemptSummary[]>("/my-attempts"),
+  myAssignments: () => apiClient.get<MyAssignment[]>("/my-assignments"),
   myAttempt: (attemptId: number | string) =>
     apiClient.get<MyAttemptDetail>(`/my-attempts/${attemptId}`),
   submitAttempt: (payload: SubmitAttemptPayload) => apiClient.post("/quiz-attempts", payload),

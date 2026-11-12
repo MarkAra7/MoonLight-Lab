@@ -98,6 +98,8 @@ export const classApi = {
     apiClient.put(`/teacher/assignments/${id}`, payload),
   removeAssignment: (id: number | string) => apiClient.delete(`/teacher/assignments/${id}`),
   assignmentResults: (id: number | string) => apiClient.get(`/teacher/assignments/${id}/results`),
+  exportAssignmentResults: (id: number | string) =>
+    apiClient.get<Blob>(`/teacher/assignments/${id}/export`, { responseType: "blob" }),
   assignmentAttempt: (id: number | string, attemptId: number | string) =>
     apiClient.get<GradedAttemptPayload>(`/teacher/assignments/${id}/attempts/${attemptId}`),
   gradeAssignmentAttempt: (

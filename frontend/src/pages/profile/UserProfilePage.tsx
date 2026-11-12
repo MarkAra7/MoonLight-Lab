@@ -2,14 +2,22 @@ import { useCallback, useEffect, useState, type ReactNode } from "react";
 import axios from "axios";
 import { Link, useParams } from "react-router-dom";
 import { Badge } from "flowbite-react";
-import { getErrorMessage } from "@/api";
+import { getErrorMessage, miscApi } from "@/api";
 import { quizApi } from "@/api/quiz";
 import { usersApi } from "@/api/users";
 import { useAuth } from "@/context/AuthContext";
 import { Pagination } from "@/components/Pagination";
 import { QuizCard } from "@/components/QuizCard";
 import { formatDate, mediaUrl } from "@/utils/helpers";
-import type { Quiz, User } from "@/api/types";
+import type { MyAssignment, Quiz, User } from "@/api/types";
+
+const dateFormat: Intl.DateTimeFormatOptions = {
+  year: "numeric",
+  month: "short",
+  day: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+};
 
 type ViewState =
   | { kind: "loading" }
@@ -29,6 +37,12 @@ function avatarLetter(user: User | null): string {
     user?.username?.trim() ||
     "";
   return source.charAt(0).toUpperCase() || "?";
+}
+
+function attemptsLeftLabel(assignment: MyAssignment): string {
+  if (assignment.attempts_remaining === -1) return "Unlimited attempts";
+  const remaining = assignment.attempts_remaining ?? 0;
+  return `${remaining} attempt${remaining === 1 ? "" : "s"} left`;
 }
 
 function MetaItem({ icon, children }: { icon: ReactNode; children: ReactNode }) {
@@ -104,6 +118,9 @@ export function UserProfilePage() {
   const [quizzesLoading, setQuizzesLoading] = useState(true);
   const [quizzesError, setQuizzesError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
+  const [assignments, setAssignments] = useState<MyAssignment[]>([]);
+  const [assignmentsLoading, setAssignmentsLoading] = useState(false);
+  const [assignmentsError, setAssignmentsError] = useState<string | null>(null);
 
   const retry = useCallback(() => setAttempt((n) => n + 1), []);
 
@@ -159,6 +176,38 @@ export function UserProfilePage() {
       active = false;
     };
   }, [username, quizzesPage, attempt]);
+
+  useEffect(() => {
+    if (view.kind !== "ready" || !user) return;
+
+    const role = view.profile.role?.title;
+    const isOwnerView =
+      view.profile.id === user.id && (role === "student" || role === "individual");
+    if (!isOwnerView) return;
+
+    let active = true;
+
+    (async () => {
+      setAssignmentsLoading(true);
+      setAssignmentsError(null);
+      try {
+        const { data } = await miscApi.myAssignments();
+        if (!active) return;
+        setAssignments(data ?? []);
+      } catch (err) {
+        if (!active) return;
+        console.error("Failed to fetch assigned work:", err);
+        setAssignments([]);
+        setAssignmentsError(getErrorMessage(err, "Could not load your assigned work."));
+      } finally {
+        if (active) setAssignmentsLoading(false);
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [user, view]);
 
   if (view.kind === "loading") {
     return (
@@ -227,6 +276,8 @@ export function UserProfilePage() {
 
   const { profile } = view;
   const isOwner = Boolean(user && profile.id === user.id);
+  const showsAssignedWork =
+    isOwner && (profile.role?.title === "student" || profile.role?.title === "individual");
   const displayName = profile.name?.trim() || profile.username || "";
   const avatar = profile.avatar ? mediaUrl(profile.avatar.file_path ?? profile.avatar.url) : "";
   const questions = quizzes.reduce((sum, quiz) => sum + (quiz.questions_count ?? 0), 0);
@@ -316,6 +367,112 @@ export function UserProfilePage() {
           </div>
         ))}
       </div>
+
+      {showsAssignedWork && (
+        <section className="mt-10">
+          <div className="mb-6 flex flex-wrap items-baseline justify-between gap-3">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Assigned work</h2>
+            <Link
+              to="/my-classes"
+              className="text-sm font-semibold text-sky-600 no-underline hover:text-sky-500 dark:text-sky-400"
+            >
+              My classes
+            </Link>
+          </div>
+
+          {assignmentsLoading ? (
+            <div className="flex justify-center py-12">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-sky-500 border-t-transparent" />
+            </div>
+          ) : assignmentsError ? (
+            <div className="glass-moon w-full p-6 text-center">
+              <p className="text-sm font-medium text-red-600 dark:text-red-400">
+                {assignmentsError}
+              </p>
+            </div>
+          ) : assignments.length === 0 ? (
+            <div className="glass-moon w-full p-12 text-center">
+              <p className="mb-5 text-sm font-medium text-slate-500 dark:text-slate-400">
+                No assigned work yet. Join a class to see quizzes from your teacher.
+              </p>
+              <Link
+                to="/my-classes"
+                className="inline-flex items-center rounded-xl bg-sky-600 px-6 py-3 text-sm font-bold text-white no-underline transition-colors hover:bg-sky-500 dark:bg-sky-400 dark:text-slate-900 dark:hover:bg-sky-300"
+              >
+                My classes
+              </Link>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4">
+              {assignments.map((assignment) => {
+                const dueText = assignment.due_at
+                  ? formatDate(assignment.due_at, dateFormat)
+                  : "No due date";
+                const canPlay =
+                  assignment.is_open && assignment.quiz?.quiz_id !== undefined;
+
+                return (
+                  <article
+                    key={assignment.id}
+                    className="glass-moon flex flex-col gap-4 p-6 md:flex-row md:items-center md:justify-between"
+                  >
+                    <div className="min-w-0">
+                      <div className="mb-2 flex flex-wrap items-center gap-2">
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                          {assignment.title}
+                        </h3>
+                        <Badge
+                          color={assignment.is_open ? "success" : "gray"}
+                          size="sm"
+                          className="whitespace-nowrap"
+                        >
+                          {assignment.is_open ? "Open" : "Closed"}
+                        </Badge>
+                      </div>
+                      <p className="mb-2 text-sm font-medium text-slate-600 dark:text-slate-300">
+                        {assignment.quiz?.title ?? "Quiz"}
+                        {assignment.class?.name ? ` · ${assignment.class.name}` : ""}
+                      </p>
+                      <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                        <span className="rounded-lg border border-slate-200 px-2.5 py-1 dark:border-white/10">
+                          Due {dueText}
+                        </span>
+                        <span className="rounded-lg border border-slate-200 px-2.5 py-1 dark:border-white/10">
+                          {attemptsLeftLabel(assignment)}
+                        </span>
+                        {assignment.best_score !== null && (
+                          <span className="rounded-lg border border-slate-200 px-2.5 py-1 dark:border-white/10">
+                            Best {assignment.best_score}/{assignment.best_total ?? 0}
+                          </span>
+                        )}
+                        {assignment.time_limit_minutes ? (
+                          <span className="rounded-lg border border-slate-200 px-2.5 py-1 dark:border-white/10">
+                            {assignment.time_limit_minutes} min limit
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
+
+                    {canPlay &&
+                      (assignment.attempts_remaining === 0 ? (
+                        <span className="flex-shrink-0 rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-bold text-slate-400 dark:border-white/10 dark:text-slate-500">
+                          No attempts left
+                        </span>
+                      ) : (
+                        <Link
+                          to={`/quizzes/${assignment.quiz!.quiz_id}/play?assignment=${assignment.id}`}
+                          className="inline-flex flex-shrink-0 items-center justify-center rounded-xl bg-sky-600 px-5 py-2.5 text-sm font-bold text-white no-underline transition-colors hover:bg-sky-500 dark:bg-sky-400 dark:text-slate-900 dark:hover:bg-sky-300"
+                        >
+                          Take quiz
+                        </Link>
+                      ))}
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      )}
 
       <section className="mt-10">
         <h2 className="mb-6 text-2xl font-bold text-slate-900 dark:text-white">

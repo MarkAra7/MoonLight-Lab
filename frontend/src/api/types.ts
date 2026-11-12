@@ -166,6 +166,26 @@ export interface MyAttemptDetail extends QuizAttemptResult {
   graded_at: string | null;
 }
 
+/** One assignment from any of the student's active classes. */
+export interface MyAssignment {
+  id: string;
+  title: string;
+  description: string | null;
+  class: { id: string; name: string } | null;
+  quiz: { quiz_id: string | number; title: string } | null;
+  max_attempts: number | null;
+  attempts_made: number;
+  /** -1 means unlimited attempts. */
+  attempts_remaining: number;
+  best_score: number | null;
+  best_total: number | null;
+  best_percentage: number | null;
+  is_open: boolean;
+  opens_at: string | null;
+  due_at: string | null;
+  time_limit_minutes: number | null;
+}
+
 export interface Party {
   id: string;
   party_code: string;

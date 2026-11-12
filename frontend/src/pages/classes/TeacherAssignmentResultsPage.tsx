@@ -64,6 +64,12 @@ function percentageBadge(percentage: number) {
   return "failure" as const;
 }
 
+/** Reads the filename the API suggested, with a safe fallback. */
+function exportFilename(disposition?: string): string {
+  const match = disposition?.match(/filename\*?=(?:UTF-8'')?"?([^";]+)"?/i);
+  return match?.[1] ?? "assignment-results.csv";
+}
+
 export function TeacherAssignmentResultsPage() {
   const { id } = useParams<{ id: string }>();
   const { user, loading } = useAuth();
@@ -72,6 +78,31 @@ export function TeacherAssignmentResultsPage() {
   const [resultsLoading, setResultsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<number | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
+
+  const handleExport = async () => {
+    if (!id) return;
+    setExporting(true);
+    setExportError(null);
+    try {
+      const response = await classApi.exportAssignmentResults(id);
+      const blob = new Blob([response.data], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = exportFilename(response.headers["content-disposition"]);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Failed to export results:", err);
+      setExportError(getErrorMessage(err, "Could not export these results."));
+    } finally {
+      setExporting(false);
+    }
+  };
 
   useEffect(() => {
     if (!user || !id) return;
@@ -147,16 +178,33 @@ export function TeacherAssignmentResultsPage() {
         >
           Back to class
         </Link>
-        <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-          {assignment?.title ?? "Assignment results"}
-        </h1>
-        {assignment?.quiz?.title && (
-          <p className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-400">
-            {assignment.quiz.title}
-            {assignment.due_at
-              ? ` — due ${formatDate(assignment.due_at, dateFormat)}`
-              : " — no due date"}
-          </p>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+              {assignment?.title ?? "Assignment results"}
+            </h1>
+            {assignment?.quiz?.title && (
+              <p className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-400">
+                {assignment.quiz.title}
+                {assignment.due_at
+                  ? ` — due ${formatDate(assignment.due_at, dateFormat)}`
+                  : " — no due date"}
+              </p>
+            )}
+          </div>
+          {payload && (
+            <button
+              type="button"
+              onClick={handleExport}
+              disabled={exporting}
+              className={`inline-flex flex-shrink-0 items-center justify-center rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-bold text-slate-700 transition-colors hover:border-sky-500/30 hover:bg-sky-500/5 hover:text-sky-600 disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300 dark:hover:border-sky-500/30 dark:hover:text-sky-400 ${linkFocusRing}`}
+            >
+              {exporting ? "Preparing CSV…" : "Download CSV"}
+            </button>
+          )}
+        </div>
+        {exportError && (
+          <p className="mt-3 text-sm font-medium text-red-600 dark:text-red-400">{exportError}</p>
         )}
       </header>
 
