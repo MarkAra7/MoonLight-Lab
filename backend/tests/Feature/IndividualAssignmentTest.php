@@ -172,6 +172,18 @@ class IndividualAssignmentTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_teacher_class_detail_shows_the_quiz_and_assignee(): void
+    {
+        $this->assignment('Personal task', $this->student->id);
+
+        $this->actingAs($this->teacher, 'sanctum')
+            ->getJson("/api/v1/teacher/classes/{$this->class->id}")
+            ->assertOk()
+            ->assertJsonPath('assignments.0.title', 'Personal task')
+            ->assertJsonPath('assignments.0.quiz.title', 'Personal quiz')
+            ->assertJsonPath('assignments.0.student.id', $this->student->id);
+    }
+
     public function test_a_class_wide_assignment_is_still_open_to_every_member(): void
     {
         $shared = $this->assignment('Shared task');
