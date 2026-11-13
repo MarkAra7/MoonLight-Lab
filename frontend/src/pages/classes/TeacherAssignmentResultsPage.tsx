@@ -49,6 +49,7 @@ interface ResultsPayload {
     max_attempts?: number | null;
     due_at?: string | null;
     quiz?: { quiz_id: string | number; title: string } | null;
+    student?: { first_name?: string | null; last_name?: string | null; email?: string | null } | null;
   };
   results: ResultRow[];
 }
@@ -190,6 +191,11 @@ export function TeacherAssignmentResultsPage() {
                   ? ` — due ${formatDate(assignment.due_at, dateFormat)}`
                   : " — no due date"}
               </p>
+            )}
+            {assignment?.student && (
+              <Badge color="info" size="sm" className="mt-2 inline-flex">
+                Only for {studentName(assignment.student)}
+              </Badge>
             )}
           </div>
           {payload && (

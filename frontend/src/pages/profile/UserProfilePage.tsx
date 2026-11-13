@@ -421,6 +421,11 @@ export function UserProfilePage() {
                         <h3 className="text-lg font-bold text-slate-900 dark:text-white">
                           {assignment.title}
                         </h3>
+                        {assignment.is_personal && (
+                          <Badge color="info" size="sm" className="whitespace-nowrap">
+                            For you
+                          </Badge>
+                        )}
                         <Badge
                           color={assignment.is_open ? "success" : "gray"}
                           size="sm"

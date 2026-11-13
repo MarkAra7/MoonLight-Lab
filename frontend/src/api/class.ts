@@ -8,6 +8,7 @@ export interface ClassPayload {
 
 export interface AssignmentPayload {
   class_id: string;
+  student_id?: number | string | null;
   quiz_id: string;
   title: string;
   description?: string | null;

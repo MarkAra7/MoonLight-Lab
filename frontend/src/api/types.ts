@@ -181,6 +181,7 @@ export interface MyAssignment {
   best_total: number | null;
   best_percentage: number | null;
   is_open: boolean;
+  is_personal: boolean;
   opens_at: string | null;
   due_at: string | null;
   time_limit_minutes: number | null;

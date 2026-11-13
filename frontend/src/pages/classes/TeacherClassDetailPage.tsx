@@ -45,7 +45,15 @@ interface AssignmentRow {
   opens_at?: string | null;
   due_at?: string | null;
   quiz?: { quiz_id: string | number; title: string } | null;
+  student?: { id: number; first_name?: string | null; last_name?: string | null; email?: string | null } | null;
   attempts_count?: number;
+}
+
+interface AssignmentTarget {
+  id: number;
+  first_name?: string | null;
+  last_name?: string | null;
+  email?: string | null;
 }
 
 interface TeacherClassDetail {
@@ -66,6 +74,11 @@ function avatarLetter(name: string | null | undefined): string {
 function displayName(person: User): string {
   const full = [person.first_name, person.last_name].filter(Boolean).join(" ").trim();
   return full || person.name || person.username || "Student";
+}
+
+function personName(person: AssignmentTarget): string {
+  const full = [person.first_name, person.last_name].filter(Boolean).join(" ").trim();
+  return full || person.email || "Student";
 }
 
 function inviteIsValid(item: TeacherClassDetail): boolean {
@@ -97,6 +110,7 @@ export function TeacherClassDetailPage() {
   const [quizzesError, setQuizzesError] = useState<string | null>(null);
 
   const [quizId, setQuizId] = useState("");
+  const [assignToStudent, setAssignToStudent] = useState("");
   const [assignmentTitle, setAssignmentTitle] = useState("");
   const [assignmentDescription, setAssignmentDescription] = useState("");
   const [maxAttempts, setMaxAttempts] = useState("1");
@@ -247,6 +261,7 @@ export function TeacherClassDetailPage() {
     try {
       await classApi.createAssignment({
         class_id: String(id),
+        student_id: assignToStudent || null,
         quiz_id: quizId,
         title: assignmentTitle.trim(),
         description: assignmentDescription.trim() || null,
@@ -262,6 +277,7 @@ export function TeacherClassDetailPage() {
       setOpensAt("");
       setDueAt("");
       setQuizId("");
+      setAssignToStudent("");
       setNotice("Assignment created.");
       await load();
     } catch (err) {
@@ -561,6 +577,11 @@ export function TeacherClassDetailPage() {
                       </p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
+                      {assignment.student && (
+                        <Badge color="info" size="sm" className="whitespace-nowrap">
+                          For {personName(assignment.student)}
+                        </Badge>
+                      )}
                       <Badge color="gray" size="sm" className="whitespace-nowrap">
                         {assignment.attempts_count ?? 0} attempts
                       </Badge>
@@ -609,6 +630,28 @@ export function TeacherClassDetailPage() {
                       </option>
                     ))}
                   </select>
+                </div>
+
+                <div>
+                  <Label htmlFor="assignment-student" className="mb-2">
+                    Assign to
+                  </Label>
+                  <select
+                    id="assignment-student"
+                    value={assignToStudent}
+                    onChange={(event) => setAssignToStudent(event.target.value)}
+                    className={inputClasses}
+                  >
+                    <option value="">Whole class</option>
+                    {detail.students.map((student) => (
+                      <option key={student.id} value={String(student.id)}>
+                        {displayName(student)}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+                    Pick one student for personal work, or keep it for the whole class.
+                  </p>
                 </div>
 
                 <div>

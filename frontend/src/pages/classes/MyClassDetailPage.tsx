@@ -30,6 +30,7 @@ interface StudentAssignment {
   best_score?: number | null;
   best_total?: number | null;
   is_open?: boolean;
+  is_personal?: boolean;
   opens_at?: string | null;
   due_at?: string | null;
   time_limit_minutes?: number | null;
@@ -148,6 +149,11 @@ export function MyClassDetailPage() {
                 <div className="min-w-0">
                   <div className="mb-2 flex flex-wrap items-center gap-2">
                     <h2 className="text-lg font-bold text-slate-900 dark:text-white">{assignment.title}</h2>
+                    {assignment.is_personal && (
+                      <Badge color="info" size="sm" className="whitespace-nowrap">
+                        For you
+                      </Badge>
+                    )}
                     <Badge color={isOpen ? "success" : "gray"} size="sm" className="whitespace-nowrap">
                       {isOpen ? "Open" : "Closed"}
                     </Badge>
