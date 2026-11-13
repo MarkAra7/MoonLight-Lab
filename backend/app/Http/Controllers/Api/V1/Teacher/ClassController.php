@@ -57,7 +57,7 @@ class ClassController extends Controller
 
         $class->load(['students' => function ($q) {
             $q->orderBy('class_student.joined_at', 'desc');
-        }, 'pendingStudents', 'assignments']);
+        }, 'pendingStudents', 'assignments.student:id,first_name,last_name,email']);
 
         return response()->json($class);
     }

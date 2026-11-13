@@ -16,7 +16,7 @@ class AssignmentController extends Controller
     public function index(Request $request)
     {
         $assignments = Assignment::where('teacher_id', $request->user()->id)
-            ->with(['class:id,name', 'quiz:quiz_id,title'])
+            ->with(['class:id,name', 'quiz:quiz_id,title', 'student:id,first_name,last_name,email'])
             ->withCount(['attempts'])
             ->orderBy('created_at', 'desc')
             ->get();
@@ -28,6 +28,7 @@ class AssignmentController extends Controller
     {
         $data = $request->validate([
             'class_id' => 'required|string|exists:classes,id',
+            'student_id' => 'nullable|string|exists:users,id',
             'quiz_id' => 'required|string|exists:quizzes,quiz_id',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string|max:2000',
@@ -45,8 +46,13 @@ class AssignmentController extends Controller
         // must not be able to use it to expose another author's private draft.
         if ($quiz->author_id !== $request->user()->id) abort(403);
 
+        if (!empty($data['student_id']) && ! $this->studentIsInClass($class, $data['student_id'])) {
+            return response()->json(['message' => 'That student is not in this class.'], 422);
+        }
+
         $assignment = Assignment::create([
             'class_id' => $data['class_id'],
+            'student_id' => $data['student_id'] ?? null,
             'quiz_id' => $data['quiz_id'],
             'teacher_id' => $request->user()->id,
             'title' => $data['title'],
@@ -57,7 +63,10 @@ class AssignmentController extends Controller
             'due_at' => $data['due_at'] ?? null,
         ]);
 
-        $students = $class->students;
+        $students = !empty($data['student_id'])
+            ? $class->students()->whereKey($data['student_id'])->get()
+            : $class->students;
+
         foreach ($students as $student) {
             Notification::create([
                 'user_id' => $student->id,
@@ -68,14 +77,22 @@ class AssignmentController extends Controller
             ]);
         }
 
-        return response()->json($assignment->load(['class:id,name', 'quiz:quiz_id,title']), 201);
+        return response()->json(
+            $assignment->load(['class:id,name', 'quiz:quiz_id,title', 'student:id,first_name,last_name,email']),
+            201
+        );
     }
 
     public function show(Request $request, Assignment $assignment)
     {
         if ($assignment->teacher_id !== $request->user()->id) abort(403);
 
-        $assignment->load(['class:id,name', 'quiz', 'attempts.student:id,first_name,last_name,email']);
+        $assignment->load([
+            'class:id,name',
+            'student:id,first_name,last_name,email',
+            'quiz',
+            'attempts.student:id,first_name,last_name,email',
+        ]);
         return response()->json($assignment);
     }
 
@@ -84,6 +101,7 @@ class AssignmentController extends Controller
         if ($assignment->teacher_id !== $request->user()->id) abort(403);
 
         $data = $request->validate([
+            'student_id' => 'sometimes|nullable|string|exists:users,id',
             'title' => 'sometimes|string|max:255',
             'description' => 'nullable|string|max:2000',
             'max_attempts' => 'nullable|integer|min:0|max:100',
@@ -92,8 +110,14 @@ class AssignmentController extends Controller
             'due_at' => 'nullable|date|after:opens_at',
         ]);
 
+        if (!empty($data['student_id']) && ! $this->studentIsInClass($assignment->class, $data['student_id'])) {
+            return response()->json(['message' => 'That student is not in this class.'], 422);
+        }
+
         $assignment->update($data);
-        return response()->json($assignment->load(['class:id,name', 'quiz:quiz_id,title']));
+        return response()->json(
+            $assignment->load(['class:id,name', 'quiz:quiz_id,title', 'student:id,first_name,last_name,email'])
+        );
     }
 
     public function destroy(Request $request, Assignment $assignment)
@@ -139,7 +163,7 @@ class AssignmentController extends Controller
         })->values();
 
         return response()->json([
-            'assignment' => $assignment->load('quiz:quiz_id,title'),
+            'assignment' => $assignment->load(['quiz:quiz_id,title', 'student:id,first_name,last_name,email']),
             'results' => $results,
         ]);
     }
@@ -153,7 +177,7 @@ class AssignmentController extends Controller
     {
         if ($assignment->teacher_id !== $request->user()->id) abort(403);
 
-        $assignment->load(['class:id,name', 'quiz:quiz_id,title']);
+        $assignment->load(['class:id,name', 'quiz:quiz_id,title', 'student:id,first_name,last_name,email']);
 
         $attempts = QuizAttempt::where('assignment_id', $assignment->id)
             ->with('student:id,first_name,last_name,email')
@@ -161,12 +185,16 @@ class AssignmentController extends Controller
             ->get()
             ->groupBy('student_id');
 
-        $classStudents = $assignment->class
-            ? $assignment->class->students()
-                ->orderBy('last_name')
-                ->orderBy('first_name')
-                ->get(['users.id', 'users.first_name', 'users.last_name', 'users.email'])
-            : collect();
+        // A personal assignment should produce a one-student export instead of
+        // exposing the whole class list.
+        $classStudents = $assignment->student
+            ? collect([$assignment->student])
+            : ($assignment->class
+                ? $assignment->class->students()
+                    ->orderBy('last_name')
+                    ->orderBy('first_name')
+                    ->get(['users.id', 'users.first_name', 'users.last_name', 'users.email'])
+                : collect());
 
         // A student may have left the class after submitting, so keep their
         // attempts in the export instead of losing the grades.
@@ -344,5 +372,10 @@ class AssignmentController extends Controller
             ->whereIn('answer_id', $ids)
             ->pluck('answer_text')
             ->implode(', ');
+    }
+
+    private function studentIsInClass(Classes $class, string $studentId): bool
+    {
+        return $class->students()->whereKey($studentId)->exists();
     }
 }

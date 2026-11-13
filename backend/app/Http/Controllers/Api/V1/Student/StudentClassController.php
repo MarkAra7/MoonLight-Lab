@@ -33,6 +33,10 @@ class StudentClassController extends Controller
                 $students->where('student_id', $studentId)->where('status', 'active');
             });
         })
+            ->where(function ($query) use ($studentId) {
+                $query->whereNull('student_id')
+                    ->orWhere('student_id', $studentId);
+            })
             ->with(['class:id,name', 'quiz:quiz_id,title'])
             ->with(['attempts' => fn ($query) => $query->where('student_id', $studentId)])
             ->orderBy('created_at', 'desc')
@@ -57,6 +61,7 @@ class StudentClassController extends Controller
                 'best_total' => $best ? (int) $best->total : null,
                 'best_percentage' => $best?->finalPercentage(),
                 'is_open' => $assignment->isOpen(),
+                'is_personal' => $assignment->student_id !== null,
                 'opens_at' => $assignment->opens_at,
                 'due_at' => $assignment->due_at,
                 'time_limit_minutes' => $assignment->time_limit_minutes,
@@ -76,6 +81,10 @@ class StudentClassController extends Controller
         if (!$isMember) abort(403);
 
         $assignments = Assignment::where('class_id', $class->id)
+            ->where(function ($query) use ($request) {
+                $query->whereNull('student_id')
+                    ->orWhere('student_id', $request->user()->id);
+            })
             ->with('quiz:quiz_id,title')
             ->orderBy('created_at', 'desc')
             ->get()
@@ -92,6 +101,7 @@ class StudentClassController extends Controller
                     'best_score' => $best ? $best->finalScore() : null,
                     'best_total' => $best ? (int)$best->total : null,
                     'is_open' => $a->isOpen(),
+                    'is_personal' => $a->student_id !== null,
                     'opens_at' => $a->opens_at,
                     'due_at' => $a->due_at,
                     'time_limit_minutes' => $a->time_limit_minutes,

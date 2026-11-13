@@ -145,6 +145,65 @@ class AssignmentExportTest extends TestCase
         $this->assertSame('Good work.', $rows[1][10]);
     }
 
+    public function test_export_of_a_personal_assignment_only_lists_that_student(): void
+    {
+        $personal = Assignment::create([
+            'class_id' => $this->class->id,
+            'student_id' => $this->student->id,
+            'quiz_id' => $this->assignment->quiz_id,
+            'teacher_id' => $this->teacher->id,
+            'title' => 'Personal export',
+        ]);
+
+        QuizAttempt::create([
+            'assignment_id' => $personal->id,
+            'quiz_id' => $personal->quiz_id,
+            'student_id' => $this->student->id,
+            'attempt_number' => 1,
+            'score' => 1,
+            'total' => 2,
+            'answers_data' => ['answers' => []],
+            'completed_at' => now(),
+        ]);
+
+        $rows = $this->csvRows(
+            $this->actingAs($this->teacher, 'sanctum')
+                ->get("/api/v1/teacher/assignments/{$personal->id}/export")
+                ->assertOk()
+                ->streamedContent()
+        );
+
+        $this->assertCount(2, $rows);
+        $this->assertSame(['Ada Able', 'ada@example.com'], array_slice($rows[1], 0, 2));
+        $this->assertSame('1', $rows[1][2]);
+        $this->assertSame(
+            [],
+            array_values(array_filter($rows, fn (array $row) => in_array('ben@example.com', $row, true)))
+        );
+    }
+
+    public function test_export_of_a_personal_assignment_without_attempts_still_lists_the_student(): void
+    {
+        $personal = Assignment::create([
+            'class_id' => $this->class->id,
+            'student_id' => $this->student->id,
+            'quiz_id' => $this->assignment->quiz_id,
+            'teacher_id' => $this->teacher->id,
+            'title' => 'Personal export',
+        ]);
+
+        $rows = $this->csvRows(
+            $this->actingAs($this->teacher, 'sanctum')
+                ->get("/api/v1/teacher/assignments/{$personal->id}/export")
+                ->assertOk()
+                ->streamedContent()
+        );
+
+        $this->assertCount(2, $rows);
+        $this->assertSame(['Ada Able', 'ada@example.com'], array_slice($rows[1], 0, 2));
+        $this->assertSame('', $rows[1][2]);
+    }
+
     public function test_export_without_students_is_still_a_valid_csv(): void
     {
         $this->class->students()->detach();

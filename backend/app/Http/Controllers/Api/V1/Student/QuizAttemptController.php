@@ -110,6 +110,10 @@ class QuizAttemptController extends Controller
             return response()->json(['message' => 'This assignment does not belong to the quiz.'], 422);
         }
 
+        if ($assignment && ! $assignment->isForStudent($request->user()->id)) {
+            return response()->json(['message' => 'This assignment was not assigned to you.'], 403);
+        }
+
         if ($assignment && ! $assignment->isOpen()) {
             return response()->json(['message' => 'This assignment is closed.'], 422);
         }
@@ -144,6 +148,13 @@ class QuizAttemptController extends Controller
         ]);
 
         $studentId = $request->user()->id;
+
+        if (!empty($data['assignment_id'])) {
+            $assignment = Assignment::find($data['assignment_id']);
+            if ($assignment && ! $assignment->isForStudent($studentId)) {
+                return response()->json(['message' => 'This assignment was not assigned to you.'], 403);
+            }
+        }
 
         $attemptNumber = $this->nextAttemptNumber($data['assignment_id'] ?? null, $studentId);
 
@@ -191,6 +202,10 @@ class QuizAttemptController extends Controller
 
         if ($assignment && $assignment->quiz_id !== $quiz->quiz_id) {
             return response()->json(['message' => 'This assignment does not belong to the quiz.'], 422);
+        }
+
+        if ($assignment && ! $assignment->isForStudent($request->user()->id)) {
+            return response()->json(['message' => 'This assignment was not assigned to you.'], 403);
         }
 
         $timer = $this->verifyTimer($data['attempt_token'] ?? null, $request->user(), $quiz, $assignmentId);

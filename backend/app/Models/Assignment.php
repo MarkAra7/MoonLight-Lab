@@ -16,6 +16,7 @@ class Assignment extends Model
 
     protected $fillable = [
         'class_id',
+        'student_id',
         'quiz_id',
         'teacher_id',
         'title',
@@ -43,6 +44,11 @@ class Assignment extends Model
         return $this->belongsTo(Quiz::class, 'quiz_id', 'quiz_id');
     }
 
+    public function student()
+    {
+        return $this->belongsTo(User::class, 'student_id');
+    }
+
     public function teacher()
     {
         return $this->belongsTo(User::class, 'teacher_id');
@@ -58,6 +64,15 @@ class Assignment extends Model
         if ($this->opens_at && $this->opens_at->isFuture()) return false;
         if ($this->due_at && $this->due_at->isPast()) return false;
         return true;
+    }
+
+    /**
+     * A personal assignment belongs to one student. Class-wide assignments
+     * (no student_id) stay available to everyone in the class.
+     */
+    public function isForStudent(string $studentId): bool
+    {
+        return $this->student_id === null || (string) $this->student_id === (string) $studentId;
     }
 
     public function studentAttempts($studentId)
