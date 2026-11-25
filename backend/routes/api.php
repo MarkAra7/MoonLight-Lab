@@ -2,6 +2,11 @@
 
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Category\CategoryController;
+use App\Http\Controllers\Api\V1\Student\AssessmentAttemptController;
+use App\Http\Controllers\Api\V1\Teacher\AssessmentAssignmentController;
+use App\Http\Controllers\Api\V1\Teacher\AssessmentController;
+use App\Http\Controllers\Api\V1\Teacher\AssessmentAnswerController;
+use App\Http\Controllers\Api\V1\Teacher\AssessmentQuestionController;
 use App\Http\Controllers\Api\V1\Media\MediaController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\Party\PartyController;
@@ -88,6 +93,10 @@ Route::prefix('v1')->group(function () {
         Route::post('/classes/join', [StudentClassController::class, 'join'])->middleware('throttle:6,1');
         Route::get('/my-attempts', [QuizAttemptController::class, 'myAttempts']);
         Route::get('/my-attempts/{attempt}', [QuizAttemptController::class, 'attempt']);
+        Route::get('/my-assessment-attempts', [AssessmentAttemptController::class, 'myAttempts']);
+        Route::get('/my-assessment-attempts/{attempt}', [AssessmentAttemptController::class, 'attempt']);
+        Route::post('/assessments/{assessment}/attempts/start', [AssessmentAttemptController::class, 'start']);
+        Route::post('/assessments/{assessment}/attempts', [AssessmentAttemptController::class, 'grade']);
         Route::post('/quiz-attempts', [QuizAttemptController::class, 'store']);
         Route::post('/quizzes/{quiz}/attempts/start', [QuizAttemptController::class, 'start']);
         Route::post('/quizzes/{quiz}/attempts', [QuizAttemptController::class, 'grade']);
@@ -151,6 +160,35 @@ Route::prefix('v1')->group(function () {
         Route::get('/teacher/assignments/{assignment}/export', [AssignmentController::class, 'export']);
         Route::get('/teacher/assignments/{assignment}/attempts/{attempt}', [AssignmentController::class, 'attempt']);
         Route::put('/teacher/assignments/{assignment}/attempts/{attempt}', [AssignmentController::class, 'gradeAttempt']);
+
+        Route::get('/teacher/assessments', [AssessmentController::class, 'index']);
+        Route::post('/teacher/assessments', [AssessmentController::class, 'store'])->middleware('verified.email');
+        Route::get('/teacher/assessments/{assessment}', [AssessmentController::class, 'show']);
+        Route::put('/teacher/assessments/{assessment}', [AssessmentController::class, 'update']);
+        Route::delete('/teacher/assessments/{assessment}', [AssessmentController::class, 'destroy']);
+        Route::get('/teacher/assessments/{assessment}/results', [AssessmentController::class, 'results']);
+        Route::get('/teacher/assessments/{assessment}/export', [AssessmentController::class, 'export']);
+        Route::get('/teacher/assessments/{assessment}/attempts/{attempt}', [AssessmentController::class, 'attempt']);
+        Route::put('/teacher/assessments/{assessment}/attempts/{attempt}', [AssessmentController::class, 'gradeAttempt']);
+
+        Route::get('/teacher/assessments/{assessment}/questions', [AssessmentQuestionController::class, 'index']);
+        Route::post('/teacher/assessments/{assessment}/questions', [AssessmentQuestionController::class, 'store'])->middleware('verified.email');
+        Route::put('/teacher/assessments/{assessment}/questions/reorder', [AssessmentQuestionController::class, 'reorder']);
+        Route::get('/teacher/assessment-questions/{question}', [AssessmentQuestionController::class, 'show']);
+        Route::put('/teacher/assessment-questions/{question}', [AssessmentQuestionController::class, 'update']);
+        Route::delete('/teacher/assessment-questions/{question}', [AssessmentQuestionController::class, 'destroy']);
+
+        Route::get('/teacher/assessment-questions/{question}/answers', [AssessmentAnswerController::class, 'index']);
+        Route::post('/teacher/assessment-questions/{question}/answers', [AssessmentAnswerController::class, 'store'])->middleware('verified.email');
+        Route::get('/teacher/assessment-answers/{answer}', [AssessmentAnswerController::class, 'show']);
+        Route::put('/teacher/assessment-answers/{answer}', [AssessmentAnswerController::class, 'update']);
+        Route::delete('/teacher/assessment-answers/{answer}', [AssessmentAnswerController::class, 'destroy']);
+
+        Route::get('/teacher/assessment-assignments', [AssessmentAssignmentController::class, 'index']);
+        Route::post('/teacher/assessment-assignments', [AssessmentAssignmentController::class, 'store'])->middleware('verified.email');
+        Route::get('/teacher/assessment-assignments/{assignment}', [AssessmentAssignmentController::class, 'show']);
+        Route::put('/teacher/assessment-assignments/{assignment}', [AssessmentAssignmentController::class, 'update']);
+        Route::delete('/teacher/assessment-assignments/{assignment}', [AssessmentAssignmentController::class, 'destroy']);
     });
 
 });
