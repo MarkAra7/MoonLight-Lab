@@ -27,7 +27,7 @@ export interface AssessmentQuestionPayload {
   question_type: string;
   points?: number;
   display_order?: number;
-  config?: Record<string, unknown>;
+  config?: Record<string, unknown> | null;
 }
 
 export interface AssessmentAnswerPayload {
