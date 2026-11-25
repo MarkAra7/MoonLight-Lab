@@ -306,6 +306,10 @@ class AssessmentController extends Controller
                     'question_text' => $question->question_text,
                     'question_type' => $question->question_type,
                     'points' => (int) $question->points,
+                    'answers' => $question->answers->map(fn ($answer) => [
+                        'answer_id' => $answer->answer_id,
+                        'answer_text' => $answer->answer_text,
+                    ])->values(),
                     'correct_answers' => $question->answers->where('is_correct', true)->pluck('answer_text')->values(),
                     'correct_text' => $question->correct_text,
                     'given_answer_ids' => $given['answer_ids'] ?? [],
@@ -313,6 +317,8 @@ class AssessmentController extends Controller
                     'given_code' => $given['code'] ?? '',
                     'earned' => $given['earned'] ?? 0,
                     'is_correct' => $given['is_correct'] ?? null,
+                    'test_summary' => $given['test_summary'] ?? null,
+                    'test_results' => $given['test_results'] ?? [],
                 ];
             })
             ->all();

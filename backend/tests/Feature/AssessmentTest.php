@@ -335,11 +335,21 @@ class AssessmentTest extends TestCase
 
         $this->assertSame(3.0, (float) $response->json('attempt.final_score'));
         $this->assertSame(['passed' => 2, 'total' => 2], $response->json('questions.1.test_summary'));
+        $this->assertCount(1, $response->json('questions.1.test_results'));
+        $this->assertSame('4', $response->json('questions.0.answers.0.answer_text'));
         $this->assertDatabaseHas('assessment_attempts', [
             'student_id' => $this->student->id,
             'assignment_id' => $assignment->id,
             'score' => 3,
         ]);
+
+        $this->actingAs($this->student, 'sanctum')
+            ->getJson('/api/v1/my-assessment-attempts/'.$response->json('attempt.attempt_id'))
+            ->assertOk()
+            ->assertJsonPath('questions.0.answers.0.answer_text', '4')
+            ->assertJsonPath('questions.1.test_summary.passed', 2)
+            ->assertJsonCount(1, 'questions.1.test_results')
+            ->assertJsonMissing(['expected_output' => 'two']);
     }
 
     public function test_expired_time_limit_is_rejected(): void

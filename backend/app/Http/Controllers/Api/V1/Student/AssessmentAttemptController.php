@@ -208,6 +208,7 @@ class AssessmentAttemptController extends Controller
                 'is_correct' => $correct,
                 'earned' => $earned,
                 'test_summary' => $testSummary,
+                'test_results' => $visibleTests,
             ];
 
             $stored[] = $row;
@@ -221,6 +222,10 @@ class AssessmentAttemptController extends Controller
                 'given_answer_ids' => $row['answer_ids'],
                 'given_text' => $row['text'],
                 'given_code' => $row['code'],
+                'answers' => $question->answers->map(fn ($answer) => [
+                    'answer_id' => $answer->answer_id,
+                    'answer_text' => $answer->answer_text,
+                ])->values()->all(),
                 'correct_answers' => $question->answers->where('is_correct', true)->pluck('answer_text')->values()->all(),
                 'correct_text' => $question->correct_text,
                 'test_summary' => $testSummary,
@@ -452,9 +457,14 @@ class AssessmentAttemptController extends Controller
                     'given_answer_ids' => $row['answer_ids'] ?? [],
                     'given_text' => $row['text'] ?? '',
                     'given_code' => $row['code'] ?? '',
+                    'answers' => $question?->answers->map(fn ($answer) => [
+                        'answer_id' => $answer->answer_id,
+                        'answer_text' => $answer->answer_text,
+                    ])->values()->all() ?? [],
                     'correct_answers' => $question?->answers->where('is_correct', true)->pluck('answer_text')->values()->all() ?? [],
                     'correct_text' => $question?->correct_text,
                     'test_summary' => $row['test_summary'] ?? null,
+                    'test_results' => $row['test_results'] ?? [],
                 ];
             })->values()->all();
         }
