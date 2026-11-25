@@ -3,70 +3,59 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Services\CodeRunner;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 
 class RunCodeController extends Controller
 {
-    private const SUPPORTED_LANGUAGES = [
-        'js' => ['language' => 'javascript', 'version' => '*'],
-        'py' => ['language' => 'python', 'version' => '*'],
-        'java' => ['language' => 'java', 'version' => '*'],
-        'cpp' => ['language' => 'c++', 'version' => '*'],
-        'c' => ['language' => 'c', 'version' => '*'],
-        'rb' => ['language' => 'ruby', 'version' => '*'],
-        'go' => ['language' => 'go', 'version' => '*'],
-        'rs' => ['language' => 'rust', 'version' => '*'],
-        'ts' => ['language' => 'typescript', 'version' => '*'],
-        'php' => ['language' => 'php', 'version' => '*'],
-        'sql' => ['language' => 'sql', 'version' => '*'],
-        'sh' => ['language' => 'bash', 'version' => '*'],
-    ];
+    public function __construct(private readonly CodeRunner $runner)
+    {
+    }
 
     public function execute(Request $request)
     {
         $data = $request->validate([
             'code' => 'required|string|max:10000',
-            'language' => 'required|string|in:' . implode(',', array_keys(self::SUPPORTED_LANGUAGES)),
+            'language' => 'required|string|in:'.implode(',', $this->runner->supportedLanguages()),
+            'input' => 'nullable|string|max:4000',
         ]);
 
-        $lang = self::SUPPORTED_LANGUAGES[$data['language']];
+        $result = $this->runner->run(
+            $data['code'],
+            $data['language'],
+            (string) ($data['input'] ?? '')
+        );
 
-        try {
-            $response = Http::timeout(15)->post('https://emkc.org/api/v2/piston/execute', [
-                'language' => $lang['language'],
-                'version' => $lang['version'],
-                'files' => [
-                    ['name' => 'main', 'content' => $data['code']],
-                ],
-            ]);
-
-            if ($response->failed()) {
-                return response()->json([
-                    'output' => '',
-                    'error' => 'Execution service unavailable (status: ' . $response->status() . ').',
-                ], 502);
-            }
-
-            $result = $response->json();
-            $run = $result['run'] ?? [];
-
-            return response()->json([
-                'output' => $run['stdout'] ?? '',
-                'error' => $run['stderr'] ?? ($result['message'] ?? ''),
-            ]);
-        } catch (\Exception $e) {
-            report($e);
-
+        if (str_starts_with($result['error'], 'Could not reach')) {
             return response()->json([
                 'output' => '',
                 'error' => 'Could not reach the execution service. Please try again.',
             ], 502);
         }
+
+        if (str_starts_with($result['error'], 'Execution service unavailable')) {
+            return response()->json(['output' => '', 'error' => $result['error']], 502);
+        }
+
+        return response()->json([
+            'output' => $result['output'],
+            'error' => $result['error'],
+            'ok' => $result['ok'],
+        ]);
     }
 
-    public static function getSupportedLanguages(): array
+    /** Previews every test of a code question without saving an attempt. */
+    public function tests(Request $request)
     {
-        return array_keys(self::SUPPORTED_LANGUAGES);
+        $data = $request->validate([
+            'code' => 'required|string|max:10000',
+            'language' => 'required|string|in:'.implode(',', $this->runner->supportedLanguages()),
+            'tests' => 'required|array|min:1|max:20',
+            'tests.*.input' => 'nullable|string|max:4000',
+            'tests.*.expected_output' => 'required|string|max:4000',
+            'tests.*.hidden' => 'nullable|boolean',
+        ]);
+
+        return response()->json($this->runner->runTests($data['code'], $data['language'], $data['tests']));
     }
 }

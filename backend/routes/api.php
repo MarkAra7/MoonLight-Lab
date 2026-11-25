@@ -99,6 +99,7 @@ Route::prefix('v1')->group(function () {
 
         Route::get('/quizzes/{quiz}/stats', [QuizStatsController::class, 'stats']);
         Route::post('/run-code', [RunCodeController::class, 'execute'])->middleware('throttle:20,1');
+        Route::post('/run-code/tests', [RunCodeController::class, 'tests'])->middleware('throttle:20,1');
     });
 
     Route::get('/quizzes', [QuizController::class, 'index']);
