@@ -47,6 +47,9 @@ export interface QuestionEditorCardProps {
   disabled?: boolean;
   isFirst: boolean;
   isLast: boolean;
+  /** Assessments award points per question; quizzes leave this out. */
+  points?: number;
+  onPointsChange?: (points: number) => void;
   onChange: (next: QuestionDraft) => void;
   onRemove: () => void;
   onMove: (direction: -1 | 1) => void;
@@ -59,6 +62,8 @@ export function QuestionEditorCard({
   disabled = false,
   isFirst,
   isLast,
+  points,
+  onPointsChange,
   onChange,
   onRemove,
   onMove,
@@ -111,6 +116,21 @@ export function QuestionEditorCard({
                 </option>
               ))}
             </select>
+            {onPointsChange && (
+              <label className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400">
+                Points
+                <input
+                  type="number"
+                  min={0}
+                  max={1000}
+                  value={points ?? 1}
+                  disabled={disabled}
+                  aria-label={`Points for question ${position}`}
+                  onChange={(event) => onPointsChange(Number(event.target.value))}
+                  className={`${inputClasses} w-20 py-2 text-center font-semibold`}
+                />
+              </label>
+            )}
           </div>
           <p className="mt-2 text-xs font-medium text-slate-500 dark:text-slate-400">{meta.hint}</p>
         </div>
