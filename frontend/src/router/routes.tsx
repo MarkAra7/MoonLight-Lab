@@ -2,7 +2,9 @@ import type { ReactNode } from "react";
 import {
   AdminUsersPage,
   AssessmentAssignmentsPage,
+  AssessmentAttemptGradingPage,
   AssessmentEditorPage,
+  AssessmentResultsPage,
   ForgotPasswordPage,
   TeacherAssessmentsPage,
   HomePage,
@@ -64,6 +66,8 @@ export const routes: AppRoute[] = [
   { path: "/teacher/assessments/new", element: <AssessmentEditorPage /> },
   { path: "/teacher/assessments/:assessmentId/edit", element: <AssessmentEditorPage /> },
   { path: "/teacher/assessments/:assessmentId/assignments", element: <AssessmentAssignmentsPage /> },
+  { path: "/teacher/assessments/:assessmentId/results", element: <AssessmentResultsPage /> },
+  { path: "/teacher/assessments/:assessmentId/attempts/:attemptId", element: <AssessmentAttemptGradingPage /> },
   { path: "/teacher/classes", element: <TeacherClassesPage /> },
   { path: "/teacher/classes/:id", element: <TeacherClassDetailPage /> },
   { path: "/teacher/assignments/:id", element: <TeacherAssignmentResultsPage /> },

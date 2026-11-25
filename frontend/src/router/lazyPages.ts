@@ -88,9 +88,19 @@ export const MyResultDetailPage = lazy(() =>
     default: module.MyResultDetailPage,
   }))
 );
+export const AssessmentAttemptGradingPage = lazy(() =>
+  import("@/pages/assessment/AssessmentAttemptGradingPage").then((module) => ({
+    default: module.AssessmentAttemptGradingPage,
+  }))
+);
 export const AssessmentAssignmentsPage = lazy(() =>
   import("@/pages/assessment/AssessmentAssignmentsPage").then((module) => ({
     default: module.AssessmentAssignmentsPage,
+  }))
+);
+export const AssessmentResultsPage = lazy(() =>
+  import("@/pages/assessment/AssessmentResultsPage").then((module) => ({
+    default: module.AssessmentResultsPage,
   }))
 );
 export const AssessmentEditorPage = lazy(() =>
