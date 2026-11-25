@@ -10,8 +10,10 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@monaco-editor/react": "^4.7.0",
     "axios": "^1.20.0",
     "flowbite-react": "^0.12.17",
+    "monaco-editor": "^0.58.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-easy-crop": "^6.2.3",
