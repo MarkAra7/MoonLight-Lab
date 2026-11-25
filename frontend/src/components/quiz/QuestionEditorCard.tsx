@@ -2,11 +2,15 @@ import {
   MATCH_MODES,
   QUESTION_TYPES,
   makeAnswerDraft,
+  makeCodeTestDraft,
   questionTypeMeta,
   withQuestionType,
   type AnswerDraft,
+  type CodeTestDraft,
   type QuestionDraft,
 } from "@/config/questionTypes";
+import { CodeWorkspace } from "@/components/code/CodeWorkspace";
+import { CODE_LANGUAGES } from "@/editor/monacoSetup";
 
 const inputClasses = [
   "w-full rounded-[10px] border bg-slate-50 px-4 py-3.5 text-sm text-slate-900",
@@ -63,6 +67,11 @@ export function QuestionEditorCard({
   const isChoice = meta.answerMode === "single" || meta.answerMode === "multi";
 
   const setAnswers = (answers: AnswerDraft[]) => onChange({ ...question, answers });
+
+  const setTests = (tests: CodeTestDraft[]) => onChange({ ...question, tests });
+
+  const updateTest = (key: string, patch: Partial<CodeTestDraft>) =>
+    setTests(question.tests.map((test) => (test.key === key ? { ...test, ...patch } : test)));
 
   const updateAnswer = (key: string, patch: Partial<AnswerDraft>) =>
     setAnswers(
@@ -233,6 +242,137 @@ export function QuestionEditorCard({
               placeholder="What the student should read before continuing…"
               className={`${inputClasses} resize-y`}
             />
+          </div>
+        )}
+
+        {question.question_type === "code" && (
+          <div className="flex flex-col gap-5">
+            <div>
+              <label
+                htmlFor={`code-language-${question.key}`}
+                className="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-300"
+              >
+                Programming language
+              </label>
+              <select
+                id={`code-language-${question.key}`}
+                value={question.code_language}
+                disabled={disabled}
+                onChange={(event) => onChange({ ...question, code_language: event.target.value })}
+                className={`${inputClasses} w-auto min-w-[14rem] py-2 font-semibold`}
+              >
+                {CODE_LANGUAGES.map((item) => (
+                  <option key={item.value} value={item.value}>
+                    {item.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <span className="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-300">
+                Starter code and tests
+              </span>
+              <CodeWorkspace
+                code={question.starter_code}
+                onChange={(starter_code) => onChange({ ...question, starter_code })}
+                language={question.code_language}
+                onLanguageChange={(code_language) => onChange({ ...question, code_language })}
+                tests={question.tests}
+              />
+              <p className="mt-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+                Students see the starter code and every test that is not marked hidden. Hidden tests
+                are used only when their submission is graded.
+              </p>
+            </div>
+
+            <div>
+              <span className="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-300">
+                Test cases
+              </span>
+              {question.tests.length === 0 && (
+                <p className="mb-3 text-sm font-medium text-slate-500 dark:text-slate-400">
+                  Add at least one test case for this task.
+                </p>
+              )}
+              <ul className="flex flex-col gap-3">
+                {question.tests.map((test, index) => (
+                  <li
+                    key={test.key}
+                    className="grid gap-3 rounded-xl border border-slate-200 p-3 dark:border-white/10 md:grid-cols-2"
+                  >
+                    <div>
+                      <label
+                        htmlFor={`test-input-${test.key}`}
+                        className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500"
+                      >
+                        Case {index + 1} — input (stdin)
+                      </label>
+                      <textarea
+                        id={`test-input-${test.key}`}
+                        rows={2}
+                        value={test.input}
+                        disabled={disabled}
+                        onChange={(event) => updateTest(test.key, { input: event.target.value })}
+                        placeholder="Leave empty when the program needs no input"
+                        className={`${inputClasses} resize-y font-mono text-xs`}
+                      />
+                    </div>
+                    <div>
+                      <label
+                        htmlFor={`test-output-${test.key}`}
+                        className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500"
+                      >
+                        Expected output
+                      </label>
+                      <textarea
+                        id={`test-output-${test.key}`}
+                        rows={2}
+                        value={test.expected_output}
+                        disabled={disabled}
+                        onChange={(event) =>
+                          updateTest(test.key, { expected_output: event.target.value })
+                        }
+                        placeholder="What a correct program prints"
+                        className={`${inputClasses} resize-y font-mono text-xs`}
+                      />
+                    </div>
+                    <div className="flex flex-wrap items-center justify-between gap-3 md:col-span-2">
+                      <label className="flex cursor-pointer items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-300">
+                        <input
+                          type="checkbox"
+                          checked={test.hidden}
+                          disabled={disabled}
+                          onChange={(event) => updateTest(test.key, { hidden: event.target.checked })}
+                          className="h-4 w-4 accent-sky-600 dark:accent-sky-400"
+                        />
+                        Hidden from students
+                      </label>
+                      <button
+                        type="button"
+                        disabled={disabled}
+                        onClick={() => setTests(question.tests.filter((item) => item.key !== test.key))}
+                        className="text-xs font-bold text-red-500 transition-colors hover:text-red-400 disabled:opacity-40"
+                      >
+                        Remove test
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+
+              <button
+                type="button"
+                disabled={disabled}
+                onClick={() => setTests([...question.tests, makeCodeTestDraft()])}
+                className="mt-4 inline-flex items-center gap-1.5 text-sm font-bold text-sky-600 transition-colors hover:text-sky-500 dark:text-sky-400 dark:hover:text-sky-300"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d={plusIcon} />
+                </svg>
+                Add test
+              </button>
+            </div>
           </div>
         )}
 

@@ -45,6 +45,12 @@ export const QUESTION_TYPES: QuestionTypeMeta[] = [
     hint: "Reading material that awards no points.",
     answerMode: "none",
   },
+  {
+    id: "code",
+    label: "Code task",
+    hint: "Write code that passes the teacher's tests.",
+    answerMode: "none",
+  },
 ];
 
 export const MATCH_MODES = [
@@ -96,6 +102,13 @@ export interface AnswerDraft {
   is_correct: boolean;
 }
 
+export interface CodeTestDraft {
+  key: string;
+  input: string;
+  expected_output: string;
+  hidden: boolean;
+}
+
 export interface QuestionDraft {
   key: string;
   question_id?: string | null;
@@ -107,6 +120,10 @@ export interface QuestionDraft {
   match_mode: string;
   /** `theory` only — stored in `config.content`. */
   theory_content: string;
+  /** `code` only — language, starter code and test cases in `config`. */
+  code_language: string;
+  starter_code: string;
+  tests: CodeTestDraft[];
   answers: AnswerDraft[];
   /** Server-side answers that exist for this question, so saving can prune them. */
   existing_answer_ids: string[];
@@ -121,6 +138,39 @@ export function nextDraftKey(prefix: string): string {
 
 export function makeAnswerDraft(answer_text = "", is_correct = false): AnswerDraft {
   return { key: nextDraftKey("a"), answer_text, is_correct };
+}
+
+export function makeCodeTestDraft(hidden = false): CodeTestDraft {
+  return { key: nextDraftKey("t"), input: "", expected_output: "", hidden };
+}
+
+function asString(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
+function codeTestToDraft(test: {
+  input?: string;
+  expected_output?: string;
+  hidden?: boolean;
+}): CodeTestDraft {
+  return {
+    key: nextDraftKey("t"),
+    input: test.input ?? "",
+    expected_output: test.expected_output ?? "",
+    hidden: test.hidden === true,
+  };
+}
+
+function codeTestsFromConfig(value: unknown): CodeTestDraft[] {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .filter((test): test is Record<string, unknown> => typeof test === "object" && test !== null)
+    .map((test) => codeTestToDraft({
+      input: asString(test.input),
+      expected_output: asString(test.expected_output),
+      hidden: test.hidden === true,
+    }));
 }
 
 function toAnswerDraft(answer: Answer): AnswerDraft {
@@ -147,7 +197,11 @@ export function questionToDraft(question: Question): QuestionDraft {
   const answers =
     meta.answerMode === "binary" && serverAnswers.length < 2 ? binaryPair() : serverAnswers;
 
-  const content = question.config?.content;
+  const config = question.config ?? {};
+  const content = config.content;
+  const codeTests = question.config
+    ? codeTestsFromConfig(config.tests)
+    : (question.code_config?.tests ?? []).map(codeTestToDraft);
 
   return {
     key: nextDraftKey("q"),
@@ -157,6 +211,9 @@ export function questionToDraft(question: Question): QuestionDraft {
     correct_text: question.correct_text ?? "",
     match_mode: question.match_mode ?? "case_insensitive",
     theory_content: typeof content === "string" ? content : "",
+    code_language: asString(config.language ?? question.code_config?.language) || "js",
+    starter_code: asString(config.starter_code ?? question.code_config?.starter_code),
+    tests: codeTests,
     answers,
     existing_answer_ids: serverAnswers
       .map((answer) => answer.answer_id)
@@ -181,6 +238,9 @@ export function emptyQuestionDraft(questionType = "single_choice"): QuestionDraf
     correct_text: "",
     match_mode: "case_insensitive",
     theory_content: "",
+    code_language: "js",
+    starter_code: "",
+    tests: [],
     answers,
     existing_answer_ids: [],
   };
@@ -210,6 +270,16 @@ export function buildQuestionPayload(draft: QuestionDraft, displayOrder: number)
     };
   } else if (draft.question_type === "theory") {
     config = { content: draft.theory_content };
+  } else if (draft.question_type === "code") {
+    config = {
+      language: draft.code_language || "js",
+      starter_code: draft.starter_code,
+      tests: draft.tests.map((test) => ({
+        input: test.input,
+        expected_output: test.expected_output,
+        hidden: test.hidden,
+      })),
+    };
   }
 
   return {
@@ -239,6 +309,10 @@ export function validateQuestionDraft(draft: QuestionDraft, position: number): s
 
   if (meta.id === "text_input" && !draft.correct_text.trim()) {
     return `${label} needs the correct answer.`;
+  }
+
+  if (meta.id === "code" && draft.tests.length === 0) {
+    return `${label} needs at least one test.`;
   }
 
   if (meta.answerMode === "binary") {
