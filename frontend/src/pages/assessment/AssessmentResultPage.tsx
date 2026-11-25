@@ -6,7 +6,8 @@ import { assessmentApi } from "@/api/assessment";
 import type { AssessmentAttemptSummary, AssessmentReviewQuestion } from "@/api/types";
 import { AssessmentReview } from "@/components/assessment/AssessmentReview";
 import { useAuth } from "@/context/AuthContext";
-import { linkButton, linkFocusRing, secondaryButtonClasses, SpinnerBlock } from "./assessmentUi";
+import { linkButton, linkFocusRing, secondaryButtonClasses } from "./assessmentUi";
+import { SpinnerBlock } from "./SpinnerBlock";
 
 export function AssessmentResultPage() {
   const { assessmentId, attemptId } = useParams<{ assessmentId: string; attemptId: string }>();

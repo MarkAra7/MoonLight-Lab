@@ -11,8 +11,8 @@ import {
   linkButton,
   linkFocusRing,
   secondaryButtonClasses,
-  SpinnerBlock,
 } from "./assessmentUi";
+import { SpinnerBlock } from "./SpinnerBlock";
 
 export function TeacherAssessmentsPage() {
   const { user, loading: authLoading } = useAuth();

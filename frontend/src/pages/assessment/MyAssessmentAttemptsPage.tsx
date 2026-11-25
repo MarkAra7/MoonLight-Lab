@@ -5,7 +5,8 @@ import { getErrorMessage } from "@/api";
 import { assessmentApi } from "@/api/assessment";
 import type { AssessmentAttemptSummary } from "@/api/types";
 import { useAuth } from "@/context/AuthContext";
-import { linkButton, linkFocusRing, secondaryButtonClasses, SpinnerBlock } from "./assessmentUi";
+import { linkButton, linkFocusRing, secondaryButtonClasses } from "./assessmentUi";
+import { SpinnerBlock } from "./SpinnerBlock";
 
 export function MyAssessmentAttemptsPage() {
   const [searchParams] = useSearchParams();

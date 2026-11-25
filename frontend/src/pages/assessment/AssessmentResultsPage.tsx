@@ -10,8 +10,8 @@ import {
   linkButton,
   linkFocusRing,
   secondaryButtonClasses,
-  SpinnerBlock,
 } from "./assessmentUi";
+import { SpinnerBlock } from "./SpinnerBlock";
 
 export function AssessmentResultsPage() {
   const { assessmentId } = useParams<{ assessmentId: string }>();

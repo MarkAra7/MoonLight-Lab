@@ -15,8 +15,8 @@ import {
   linkButton,
   linkFocusRing,
   primaryButtonClasses,
-  SpinnerBlock,
 } from "./assessmentUi";
+import { SpinnerBlock } from "./SpinnerBlock";
 
 const fieldLabelClasses = "mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-300";
 

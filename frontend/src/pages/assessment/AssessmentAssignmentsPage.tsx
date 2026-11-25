@@ -17,9 +17,9 @@ import {
   linkFocusRing,
   primaryButtonClasses,
   secondaryButtonClasses,
-  SpinnerBlock,
   toIso,
 } from "./assessmentUi";
+import { SpinnerBlock } from "./SpinnerBlock";
 
 interface TeacherClassOption {
   id: string;
