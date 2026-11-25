@@ -119,8 +119,10 @@ export const assessmentApi = {
       payload,
     ),
 
-  studentQuestions: (id: string) =>
-    apiClient.get<AssessmentQuestion[]>(`/assessments/${id}/questions`),
+  studentQuestions: (id: string, assignmentId?: string | null) =>
+    apiClient.get<AssessmentQuestion[]>(`/assessments/${id}/questions`, {
+      params: assignmentId ? { assignment_id: assignmentId } : undefined,
+    }),
   startAttempt: (id: string, assignmentId?: string | null) =>
     apiClient.post<AssessmentAttemptStart>(`/assessments/${id}/attempts/start`, {
       assignment_id: assignmentId ?? null,
