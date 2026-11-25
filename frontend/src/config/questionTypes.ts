@@ -114,6 +114,8 @@ export interface QuestionDraft {
   question_id?: string | null;
   question_type: string;
   question_text: string;
+  /** Assessments store points per question; quizzes ignore this. */
+  points: number;
   /** `text_input` only — stored in `config.correct_text`. */
   correct_text: string;
   /** `text_input` only — stored in `config.match_mode`. */
@@ -208,6 +210,7 @@ export function questionToDraft(question: Question): QuestionDraft {
     question_id: question.question_id ?? null,
     question_type: question.question_type,
     question_text: question.question_text ?? "",
+    points: (question as { points?: number }).points ?? 1,
     correct_text: question.correct_text ?? "",
     match_mode: question.match_mode ?? "case_insensitive",
     theory_content: typeof content === "string" ? content : "",
@@ -235,6 +238,7 @@ export function emptyQuestionDraft(questionType = "single_choice"): QuestionDraf
     question_id: null,
     question_type: meta.id,
     question_text: "",
+    points: 1,
     correct_text: "",
     match_mode: "case_insensitive",
     theory_content: "",
