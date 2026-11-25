@@ -56,8 +56,8 @@ export interface SubmitAssessmentPayload {
     question_id: string;
     answer_id?: string | null;
     answer_ids?: string[];
-    text?: string;
-    code?: string;
+    text?: string | null;
+    code?: string | null;
   }>;
 }
 

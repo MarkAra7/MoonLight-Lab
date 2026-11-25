@@ -103,6 +103,11 @@ export const AssessmentResultsPage = lazy(() =>
     default: module.AssessmentResultsPage,
   }))
 );
+export const AssessmentTakePage = lazy(() =>
+  import("@/pages/assessment/AssessmentTakePage").then((module) => ({
+    default: module.AssessmentTakePage,
+  }))
+);
 export const MyAssessmentAttemptsPage = lazy(() =>
   import("@/pages/assessment/MyAssessmentAttemptsPage").then((module) => ({
     default: module.MyAssessmentAttemptsPage,
