@@ -308,6 +308,7 @@ export interface AssessmentReviewQuestion {
   given_answer_ids?: string[];
   given_text?: string;
   given_code?: string;
+  answers?: Answer[];
   correct_answers?: string[];
   correct_text?: string | null;
   test_summary?: CodeTestSummary | null;
@@ -316,6 +317,27 @@ export interface AssessmentReviewQuestion {
 
 export interface AssessmentAttemptResult {
   attempt: AssessmentAttemptSummary;
+  questions: AssessmentReviewQuestion[];
+}
+
+/** The teacher-facing attempt summary uses different field names from the student view. */
+export interface TeacherAssessmentAttemptDetail {
+  id: number;
+  attempt_number: number;
+  auto_score: number;
+  teacher_score: number | null;
+  final_score: number;
+  total: number;
+  percentage: number;
+  teacher_feedback?: string | null;
+  graded_by?: string | null;
+  graded_at?: string | null;
+  completed_at?: string | null;
+  student?: User | null;
+}
+
+export interface TeacherAssessmentAttemptResult {
+  attempt: TeacherAssessmentAttemptDetail;
   questions: AssessmentReviewQuestion[];
 }
 

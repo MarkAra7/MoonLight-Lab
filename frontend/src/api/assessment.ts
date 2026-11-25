@@ -9,6 +9,7 @@ import type {
   AssessmentQuestion,
   AssessmentResultRow,
   AssessmentReviewQuestion,
+  TeacherAssessmentAttemptResult,
 } from "./types";
 
 export interface AssessmentPayload {
@@ -107,13 +108,13 @@ export const assessmentApi = {
   exportResults: (id: string) =>
     apiClient.get<Blob>(`/teacher/assessments/${id}/export`, { responseType: "blob" }),
   attempt: (id: string, attemptId: number) =>
-    apiClient.get<AssessmentAttemptResult>(`/teacher/assessments/${id}/attempts/${attemptId}`),
+    apiClient.get<TeacherAssessmentAttemptResult>(`/teacher/assessments/${id}/attempts/${attemptId}`),
   gradeAttempt: (
     id: string,
     attemptId: number,
     payload: { teacher_score: number; teacher_feedback?: string | null },
   ) =>
-    apiClient.put<AssessmentAttemptResult>(
+    apiClient.put<TeacherAssessmentAttemptResult>(
       `/teacher/assessments/${id}/attempts/${attemptId}`,
       payload,
     ),
