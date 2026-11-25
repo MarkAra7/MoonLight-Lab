@@ -49,6 +49,9 @@ class AssessmentAttemptController extends Controller
                         'answer_id' => $answer->answer_id,
                         'answer_text' => $answer->answer_text,
                     ])->values()->all(),
+                    'theory_content' => $question->question_type === 'theory'
+                        ? ($question->config['content'] ?? null)
+                        : null,
                     'code_config' => $question->question_type === 'code' ? [
                         'language' => $question->language,
                         'starter_code' => $question->starter_code,

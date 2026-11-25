@@ -258,6 +258,7 @@ export interface AssessmentQuestion {
   language?: string;
   starter_code?: string;
   tests?: CodeTest[];
+  theory_content?: string | null;
   answers?: Answer[];
   code_config?: CodeConfig | null;
 }

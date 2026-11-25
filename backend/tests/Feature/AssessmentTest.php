@@ -242,14 +242,22 @@ class AssessmentTest extends TestCase
             ],
         ]);
 
+        AssessmentQuestion::create([
+            'assessment_id' => $assessment->assessment_id,
+            'question_text' => 'Background reading',
+            'question_type' => 'theory',
+            'config' => ['content' => 'Read this first.'],
+        ]);
+
         $response = $this->actingAs($this->student, 'sanctum')
             ->getJson('/api/v1/assessments/'.$assessment->assessment_id.'/questions')
             ->assertOk()
-            ->assertJsonCount(2)
+            ->assertJsonCount(3)
             ->assertJsonMissingPath('0.answers.0.is_correct')
             ->assertJsonMissing(['expected_output' => 'secret']);
 
         $response->assertJsonPath('1.code_config.starter_code', 'print(input())');
+        $response->assertJsonPath('2.theory_content', 'Read this first.');
         $this->assertCount(1, $response->json('1.code_config.tests'));
     }
 
@@ -369,9 +377,21 @@ class AssessmentTest extends TestCase
             'attempt_number' => 1,
             'score' => 0,
             'total' => 5,
-            'answers_data' => ['answers' => []],
+            'answers_data' => ['answers' => [[
+                'question_id' => $question->question_id,
+                'answer_ids' => [],
+                'text' => 'My essay',
+                'code' => '',
+                'earned' => 0,
+                'is_correct' => null,
+            ]]],
             'completed_at' => now(),
         ]);
+
+        $this->actingAs($this->teacher, 'sanctum')
+            ->getJson('/api/v1/teacher/assessments/'.$assessment->assessment_id.'/attempts/'.$attempt->id)
+            ->assertOk()
+            ->assertJsonPath('questions.0.given_text', 'My essay');
 
         $this->actingAs($this->teacher, 'sanctum')
             ->getJson('/api/v1/teacher/assessments/'.$assessment->assessment_id.'/results')

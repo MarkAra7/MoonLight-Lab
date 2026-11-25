@@ -216,7 +216,7 @@ class AssessmentController extends Controller
 
         return response()->json([
             'attempt' => $this->attemptSummary($attempt),
-            'questions' => $this->review($assessment),
+            'questions' => $this->review($assessment, $attempt),
         ]);
     }
 
@@ -238,7 +238,7 @@ class AssessmentController extends Controller
 
         return response()->json([
             'attempt' => $this->attemptSummary($attempt->fresh()),
-            'questions' => $this->review($assessment),
+            'questions' => $this->review($assessment, $attempt->fresh()),
         ]);
     }
 
@@ -289,21 +289,32 @@ class AssessmentController extends Controller
         ];
     }
 
-    /** Question texts and expected answers needed by the manual grading screen. */
-    private function review(Assessment $assessment): array
+    /** Question texts, expected answers and the student's work for manual grading. */
+    private function review(Assessment $assessment, AssessmentAttempt $attempt): array
     {
+        $stored = collect($attempt->answers_data['answers'] ?? [])->keyBy('question_id');
+
         return $assessment->questions()
             ->with('answers')
             ->orderBy('display_order')
             ->get()
-            ->map(fn ($question) => [
-                'question_id' => $question->question_id,
-                'question_text' => $question->question_text,
-                'question_type' => $question->question_type,
-                'points' => (int) $question->points,
-                'correct_answers' => $question->answers->where('is_correct', true)->pluck('answer_text')->values(),
-                'correct_text' => $question->correct_text,
-            ])
+            ->map(function ($question) use ($stored) {
+                $given = $stored->get($question->question_id, []);
+
+                return [
+                    'question_id' => $question->question_id,
+                    'question_text' => $question->question_text,
+                    'question_type' => $question->question_type,
+                    'points' => (int) $question->points,
+                    'correct_answers' => $question->answers->where('is_correct', true)->pluck('answer_text')->values(),
+                    'correct_text' => $question->correct_text,
+                    'given_answer_ids' => $given['answer_ids'] ?? [],
+                    'given_text' => $given['text'] ?? '',
+                    'given_code' => $given['code'] ?? '',
+                    'earned' => $given['earned'] ?? 0,
+                    'is_correct' => $given['is_correct'] ?? null,
+                ];
+            })
             ->all();
     }
 }
