@@ -88,6 +88,11 @@ export const MyResultDetailPage = lazy(() =>
     default: module.MyResultDetailPage,
   }))
 );
+export const AssessmentAssignmentsPage = lazy(() =>
+  import("@/pages/assessment/AssessmentAssignmentsPage").then((module) => ({
+    default: module.AssessmentAssignmentsPage,
+  }))
+);
 export const AssessmentEditorPage = lazy(() =>
   import("@/pages/assessment/AssessmentEditorPage").then((module) => ({
     default: module.AssessmentEditorPage,
