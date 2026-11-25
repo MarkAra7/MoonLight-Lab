@@ -58,6 +58,7 @@ export interface AttemptAnswerPayload {
   answer_id?: string | null;
   answer_ids?: string[];
   text?: string | null;
+  code?: string | null;
 }
 
 export interface SubmitAttemptAnswersPayload {

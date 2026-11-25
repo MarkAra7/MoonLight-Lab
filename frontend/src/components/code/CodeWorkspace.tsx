@@ -13,6 +13,8 @@ export interface CodeWorkspaceProps {
   tests?: CodeTest[];
   /** Hide the Run / Run tests buttons (for example while grading is disabled). */
   readOnlyRun?: boolean;
+  /** Prevent both editing and execution while an attempt is being submitted. */
+  readOnly?: boolean;
 }
 
 type PanelTab = "tests" | "output" | "terminal";
@@ -32,6 +34,7 @@ export function CodeWorkspace({
   onLanguageChange,
   tests = [],
   readOnlyRun = false,
+  readOnly = false,
 }: CodeWorkspaceProps) {
   const meta = languageMeta(language);
   const [panel, setPanel] = useState<PanelTab>("tests");
@@ -93,6 +96,7 @@ export function CodeWorkspace({
           <select
             aria-label="Programming language"
             value={language}
+            disabled={readOnly}
             onChange={(event) => onLanguageChange?.(event.target.value)}
             className="rounded-md border border-white/10 bg-white/[0.06] px-2 py-1 text-[11px] font-semibold text-slate-200 outline-none"
           >
@@ -106,14 +110,14 @@ export function CodeWorkspace({
 
         {!readOnlyRun && (
           <>
-            <button type="button" className={toolbarButton} onClick={run} disabled={busy}>
+            <button type="button" className={toolbarButton} onClick={run} disabled={busy || readOnly}>
               ▶ Run
             </button>
             <button
               type="button"
               className={toolbarButton}
               onClick={runTests}
-              disabled={busy || tests.length === 0}
+              disabled={busy || readOnly || tests.length === 0}
             >
               ✓ Run tests
             </button>
@@ -150,6 +154,7 @@ export function CodeWorkspace({
             value={code}
             onChange={(value) => onChange(value ?? "")}
             options={{
+              readOnly,
               fontSize: 13,
               minimap: { enabled: false },
               automaticLayout: true,
@@ -236,6 +241,7 @@ export function CodeWorkspace({
               <textarea
                 value={stdin}
                 onChange={(event) => setStdin(event.target.value)}
+                disabled={readOnly}
                 rows={3}
                 placeholder="Type input for a single run…"
                 className="w-full rounded-md border border-white/10 bg-black/30 p-2 text-slate-200 outline-none placeholder:text-slate-600"

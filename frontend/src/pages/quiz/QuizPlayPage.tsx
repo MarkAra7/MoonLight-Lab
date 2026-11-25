@@ -33,6 +33,7 @@ function SpinnerBlock() {
 function isAnswered(question: Question, answer: TakeAnswer | undefined): boolean {
   if (question.question_type === "theory") return true;
   if (!answer) return false;
+  if (question.question_type === "code") return Boolean(answer.code?.trim());
 
   const meta = questionTypeMeta(question.question_type);
 
@@ -94,9 +95,18 @@ export function QuizPlayPage() {
       const { started_at, server_now, deadline_at, time_limit_seconds, attempt_token } =
         startRes.data;
 
+      const loadedQuestions = questionsRes.data ?? [];
+      const initialAnswers: Record<string, TakeAnswer> = {};
+      for (const question of loadedQuestions) {
+        initialAnswers[question.question_id] =
+          question.question_type === "code"
+            ? { code: question.code_config?.starter_code ?? "" }
+            : {};
+      }
+
       setQuiz(quizRes.data);
-      setQuestions(questionsRes.data ?? []);
-      setAnswers({});
+      setQuestions(loadedQuestions);
+      setAnswers(initialAnswers);
       setResult(null);
       setCurrentIndex(0);
       setStartedAt(started_at);
@@ -154,6 +164,7 @@ export function QuizPlayPage() {
             answer_id: answer.answer_id ?? null,
             answer_ids: answer.answer_ids ?? [],
             text: answer.text ?? null,
+            code: answer.code ?? null,
           };
         }),
       });

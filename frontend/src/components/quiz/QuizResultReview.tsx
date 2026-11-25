@@ -24,9 +24,11 @@ function ReviewRow({
 }) {
   const meta = questionTypeMeta(row.question_type);
   const isTheory = row.is_correct === null;
+  const isCode = row.question_type === "code";
 
-  const given =
-    row.question_type === "text_input"
+  const given = isCode
+    ? (row.given_code ?? "").trim()
+    : row.question_type === "text_input"
       ? row.given_text.trim()
       : question
         ? optionTexts(question, row.given_answer_ids).join(", ")
@@ -35,9 +37,11 @@ function ReviewRow({
             .join(", ");
 
   const correct =
-    row.question_type === "text_input"
-      ? (row.correct_text ?? "").trim()
-      : row.correct_answers
+    isCode
+      ? ""
+      : row.question_type === "text_input"
+        ? (row.correct_text ?? "").trim()
+        : row.correct_answers
           .map((answer) => answer.answer_text?.trim())
           .filter(Boolean)
           .join(", ");
@@ -67,7 +71,44 @@ function ReviewRow({
 
       <p className="text-sm font-bold text-slate-900 dark:text-white">{row.question_text}</p>
 
-      {isTheory ? (
+      {isCode ? (
+        <div className="mt-4 flex flex-col gap-3 text-sm">
+          <p className="font-bold text-slate-700 dark:text-slate-300">
+            Tests passed: {row.test_summary?.passed ?? 0} / {row.test_summary?.total ?? 0}
+          </p>
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+              Your code
+            </p>
+            <pre className="mt-1 max-h-64 overflow-auto rounded-xl bg-slate-950 p-3 font-mono text-xs text-slate-200 dark:bg-black/40">
+              {given || "No code submitted"}
+            </pre>
+          </div>
+          {(row.test_results?.length ?? 0) > 0 && (
+            <ul className="flex flex-col gap-1.5">
+              {row.test_results?.map((result) => (
+                <li
+                  key={result.test}
+                  className={
+                    result.passed
+                      ? "font-medium text-emerald-600 dark:text-emerald-400"
+                      : "font-medium text-red-600 dark:text-red-400"
+                  }
+                >
+                  {result.passed ? "PASS" : "FAIL"} case {result.test}
+                  {" · expected "}
+                  {JSON.stringify(result.expected_output)}
+                  {" · got "}
+                  {JSON.stringify(result.actual_output)}
+                </li>
+              ))}
+            </ul>
+          )}
+          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+            Hidden tests are counted in the score but their cases are not shown.
+          </p>
+        </div>
+      ) : isTheory ? (
         <p className="mt-2 text-sm font-medium text-slate-500 dark:text-slate-400">
           Reading material — this section awards no points.
         </p>

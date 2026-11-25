@@ -1,4 +1,5 @@
 import type { Question } from "@/api/types";
+import { CodeWorkspace } from "@/components/code/CodeWorkspace";
 import { questionTypeMeta } from "@/config/questionTypes";
 
 const inputClasses = [
@@ -24,6 +25,7 @@ export interface TakeAnswer {
   answer_id?: string | null;
   answer_ids?: string[];
   text?: string | null;
+  code?: string | null;
 }
 
 export interface QuizQuestionTakeProps {
@@ -100,6 +102,23 @@ export function QuizQuestionTake({
             placeholder="Type your answer…"
             aria-label={`Answer for question ${position}`}
             className={inputClasses}
+          />
+        </div>
+      )}
+
+      {question.question_type === "code" && (
+        <div className="mt-5">
+          <p className="mb-3 text-sm font-medium text-slate-500 dark:text-slate-400">
+            Write a program that satisfies the visible tests. Hidden tests are also used when your
+            answer is graded.
+          </p>
+          <CodeWorkspace
+            code={value.code ?? question.code_config?.starter_code ?? ""}
+            onChange={(code) => onChange({ ...value, code })}
+            language={question.code_config?.language ?? "js"}
+            languageLocked
+            tests={question.code_config?.tests ?? []}
+            readOnly={disabled}
           />
         </div>
       )}
