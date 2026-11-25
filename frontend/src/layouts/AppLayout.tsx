@@ -112,9 +112,14 @@ export function AppLayout() {
             )}
 
             {(user?.role?.title === "teacher" || user?.role?.title === "admin") && (
-              <NavLink to="/teacher/classes" className={navLinkClass}>
-                Classes
-              </NavLink>
+              <>
+                <NavLink to="/teacher/assessments" className={navLinkClass}>
+                  Assessments
+                </NavLink>
+                <NavLink to="/teacher/classes" className={navLinkClass}>
+                  Classes
+                </NavLink>
+              </>
             )}
 
             <ThemeToggle />
