@@ -9,6 +9,7 @@ use App\Models\Question;
 use App\Models\Quiz;
 use App\Models\QuizAttempt;
 use App\Models\User;
+use App\Services\CodeRunner;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
@@ -20,6 +21,10 @@ class QuizAttemptController extends Controller
      * deadline is not lost.
      */
     private const TIME_LIMIT_GRACE_SECONDS = 15;
+
+    public function __construct(private readonly CodeRunner $runner)
+    {
+    }
 
     public function myAttempts(Request $request)
     {
@@ -195,6 +200,7 @@ class QuizAttemptController extends Controller
             'answers.*.answer_ids' => ['array'],
             'answers.*.answer_ids.*' => ['string'],
             'answers.*.text' => ['nullable', 'string', 'max:2000'],
+            'answers.*.code' => ['nullable', 'string', 'max:10000'],
         ]);
 
         $assignmentId = $data['assignment_id'] ?? null;
@@ -249,6 +255,27 @@ class QuizAttemptController extends Controller
             $given = $submitted->get($question->question_id) ?? [];
             $scorable = $question->question_type !== 'theory';
             $correct = $scorable ? $this->isCorrect($question, $given) : null;
+            $code = (string) ($given['code'] ?? '');
+            $testSummary = null;
+            $testResults = [];
+
+            if ($question->question_type === 'code') {
+                $outcome = $this->runner->runTests($code, $question->language, $question->tests);
+                $correct = $outcome['total'] > 0 && $outcome['passed'] === $outcome['total'];
+                $testSummary = ['passed' => $outcome['passed'], 'total' => $outcome['total']];
+                $testResults = collect($outcome['results'])
+                    ->reject(fn ($result) => $result['hidden'])
+                    ->map(fn ($result) => [
+                        'test' => $result['test'],
+                        'passed' => $result['passed'],
+                        'input' => $result['input'],
+                        'expected_output' => $result['expected_output'],
+                        'actual_output' => $result['actual_output'],
+                        'error' => $result['error'],
+                    ])
+                    ->values()
+                    ->all();
+            }
 
             if ($scorable) {
                 $total++;
@@ -265,7 +292,10 @@ class QuizAttemptController extends Controller
                 'question_id' => $question->question_id,
                 'answer_ids' => $answerIds,
                 'text' => $text,
+                'code' => $code,
                 'is_correct' => $correct,
+                'test_summary' => $testSummary,
+                'test_results' => $testResults,
             ];
 
             $stored[] = $storedRow;
@@ -335,6 +365,9 @@ class QuizAttemptController extends Controller
                     ->all()
                 : [],
             'correct_text' => $question?->question_type === 'text_input' ? $question->correct_text : null,
+            'given_code' => (string) ($row['code'] ?? ''),
+            'test_summary' => $row['test_summary'] ?? null,
+            'test_results' => $row['test_results'] ?? [],
         ];
     }
 

@@ -41,6 +41,24 @@ class Question extends Model
         return $this->config['match_mode'] ?? 'exact';
     }
 
+    public function getLanguageAttribute(): string
+    {
+        return $this->config['language'] ?? 'js';
+    }
+
+    public function getStarterCodeAttribute(): string
+    {
+        return $this->config['starter_code'] ?? '';
+    }
+
+    /** @return array<int, array{input?: string, expected_output?: string, hidden?: bool}> */
+    public function getTestsAttribute(): array
+    {
+        $tests = $this->config['tests'] ?? [];
+
+        return is_array($tests) ? array_values($tests) : [];
+    }
+
     public function quiz()
     {
         return $this->belongsTo(Quiz::class, 'quiz_id', 'quiz_id');

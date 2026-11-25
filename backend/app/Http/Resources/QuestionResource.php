@@ -34,6 +34,20 @@ class QuestionResource extends JsonResource
             'created_at' => $this->when($isAuthor, $this->created_at),
             // Reading material for theory questions is not an answer, so takers see it too.
             'theory_content' => $this->question_type === 'theory' ? ($this->config['content'] ?? null) : null,
+            // Code tasks need their language, starter code and visible tests in
+            // the browser. Hidden tests stay on the server for grading.
+            'code_config' => $this->when($this->question_type === 'code', fn () => [
+                'language' => $this->resource->language,
+                'starter_code' => $this->resource->starter_code,
+                'tests' => collect($this->resource->tests)
+                    ->reject(fn ($test) => (bool) ($test['hidden'] ?? false))
+                    ->map(fn ($test) => [
+                        'input' => (string) ($test['input'] ?? ''),
+                        'expected_output' => (string) ($test['expected_output'] ?? ''),
+                    ])
+                    ->values()
+                    ->all(),
+            ]),
             'media' => $this->whenLoaded('media', fn () => new MediaResource($this->media)),
             'answers' => $this->whenLoaded('answers', fn () => $this->answers->map(
                 fn ($answer) => (new AnswerResource($answer))->setAuthor($isAuthor)
