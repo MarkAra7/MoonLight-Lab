@@ -52,6 +52,11 @@ class Classes extends Model
         return $this->hasMany(Assignment::class, 'class_id', 'id');
     }
 
+    public function assessmentAssignments()
+    {
+        return $this->hasMany(AssessmentAssignment::class, 'class_id', 'id');
+    }
+
     public function isCodeValid(): bool
     {
         return $this->code_expires_at === null || $this->code_expires_at->isFuture();

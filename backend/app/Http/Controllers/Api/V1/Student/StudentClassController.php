@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1\Student;
 use App\Http\Controllers\Controller;
 use App\Models\Classes;
 use App\Models\ClassStudent;
+use App\Models\AssessmentAssignment;
 use App\Models\Assignment;
 use App\Models\Notification;
 use Illuminate\Http\Request;
@@ -65,10 +66,52 @@ class StudentClassController extends Controller
                 'opens_at' => $assignment->opens_at,
                 'due_at' => $assignment->due_at,
                 'time_limit_minutes' => $assignment->time_limit_minutes,
+                'kind' => 'quiz',
+                'assessment' => null,
             ];
         })->values();
 
-        return response()->json($payload);
+        $assessmentAssignments = AssessmentAssignment::whereHas('class', function ($query) use ($studentId) {
+            $query->whereHas('students', function ($students) use ($studentId) {
+                $students->where('student_id', $studentId)->where('status', 'active');
+            });
+        })
+            ->where(function ($query) use ($studentId) {
+                $query->whereNull('student_id')->orWhere('student_id', $studentId);
+            })
+            ->with(['class:id,name', 'assessment:assessment_id,title'])
+            ->with(['attempts' => fn ($query) => $query->where('student_id', $studentId)])
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function (AssessmentAssignment $assignment) use ($studentId) {
+                $attempts = $assignment->attempts;
+                $best = $attempts->sortByDesc(fn ($attempt) => $attempt->finalScore())->first();
+
+                return [
+                    'id' => $assignment->id,
+                    'title' => $assignment->title,
+                    'description' => $assignment->description,
+                    'class' => $assignment->class?->only(['id', 'name']),
+                    'quiz' => null,
+                    'assessment' => $assignment->assessment,
+                    'max_attempts' => $assignment->max_attempts,
+                    'attempts_made' => $attempts->count(),
+                    'attempts_remaining' => $assignment->max_attempts === 0
+                        ? -1
+                        : max(0, $assignment->max_attempts - $attempts->count()),
+                    'best_score' => $best?->finalScore(),
+                    'best_total' => $best ? (int) $best->total : null,
+                    'best_percentage' => $best?->finalPercentage(),
+                    'is_open' => $assignment->isOpen(),
+                    'is_personal' => $assignment->student_id !== null,
+                    'opens_at' => $assignment->opens_at,
+                    'due_at' => $assignment->due_at,
+                    'time_limit_minutes' => $assignment->time_limit_minutes,
+                    'kind' => 'assessment',
+                ];
+            });
+
+        return response()->json($payload->concat($assessmentAssignments)->values());
     }
 
     public function classDetail(Request $request, Classes $class)
@@ -105,12 +148,44 @@ class StudentClassController extends Controller
                     'opens_at' => $a->opens_at,
                     'due_at' => $a->due_at,
                     'time_limit_minutes' => $a->time_limit_minutes,
+                    'kind' => 'quiz',
+                    'assessment' => null,
+                ];
+            });
+
+        $assessmentAssignments = AssessmentAssignment::where('class_id', $class->id)
+            ->where(function ($query) use ($request) {
+                $query->whereNull('student_id')->orWhere('student_id', $request->user()->id);
+            })
+            ->with('assessment:assessment_id,title')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($a) use ($request) {
+                $attempts = $a->attempts()->where('student_id', $request->user()->id)->get();
+                $best = $attempts->sortByDesc(fn ($attempt) => $attempt->finalScore())->first();
+
+                return [
+                    'id' => $a->id,
+                    'title' => $a->title,
+                    'quiz' => null,
+                    'assessment' => $a->assessment,
+                    'max_attempts' => $a->max_attempts,
+                    'attempts_made' => $attempts->count(),
+                    'attempts_remaining' => $a->max_attempts === 0 ? -1 : max(0, $a->max_attempts - $attempts->count()),
+                    'best_score' => $best?->finalScore(),
+                    'best_total' => $best ? (int) $best->total : null,
+                    'is_open' => $a->isOpen(),
+                    'is_personal' => $a->student_id !== null,
+                    'opens_at' => $a->opens_at,
+                    'due_at' => $a->due_at,
+                    'time_limit_minutes' => $a->time_limit_minutes,
+                    'kind' => 'assessment',
                 ];
             });
 
         return response()->json([
             'class' => $class->only(['id', 'name', 'description']),
-            'assignments' => $assignments,
+            'assignments' => $assignments->concat($assessmentAssignments)->values(),
         ]);
     }
 
