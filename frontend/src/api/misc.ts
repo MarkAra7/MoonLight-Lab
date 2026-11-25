@@ -1,5 +1,13 @@
 import apiClient from "./client";
-import type { Category, MyAssignment, MyAttemptDetail, MyAttemptSummary, Role } from "./types";
+import type {
+  Category,
+  CodeTest,
+  CodeTestResult,
+  MyAssignment,
+  MyAttemptDetail,
+  MyAttemptSummary,
+  Role,
+} from "./types";
 
 export interface NotificationItem {
   id: number;
@@ -14,11 +22,25 @@ export interface NotificationItem {
 export interface RunCodePayload {
   code: string;
   language: string;
+  input?: string;
 }
 
 export interface RunCodeResult {
   output: string;
   error: string;
+  ok?: boolean;
+}
+
+export interface RunCodeTestsPayload {
+  code: string;
+  language: string;
+  tests: CodeTest[];
+}
+
+export interface RunCodeTestsResult {
+  passed: number;
+  total: number;
+  results: CodeTestResult[];
 }
 
 export interface SubmitAttemptPayload {
@@ -52,6 +74,8 @@ export const miscApi = {
   submitAttempt: (payload: SubmitAttemptPayload) => apiClient.post("/quiz-attempts", payload),
 
   runCode: (payload: RunCodePayload) => apiClient.post<RunCodeResult>("/run-code", payload),
+  runCodeTests: (payload: RunCodeTestsPayload) =>
+    apiClient.post<RunCodeTestsResult>("/run-code/tests", payload),
 
   users: () => apiClient.get("/users"),
   user: (id: number | string) => apiClient.get(`/users/${id}`),

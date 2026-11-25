@@ -98,7 +98,36 @@ export interface Question {
   match_mode?: string | null;
   /** Public reading material for theory questions. */
   theory_content?: string | null;
+  /** Language, starter code and visible tests for code questions. */
+  code_config?: CodeConfig | null;
   answers?: Answer[];
+}
+
+export interface CodeTest {
+  input?: string;
+  expected_output: string;
+  hidden?: boolean;
+}
+
+export interface CodeConfig {
+  language: string;
+  starter_code?: string;
+  tests?: CodeTest[];
+}
+
+export interface CodeTestResult {
+  test: number;
+  passed: boolean;
+  input: string;
+  expected_output: string;
+  actual_output: string;
+  error: string;
+  hidden?: boolean;
+}
+
+export interface CodeTestSummary {
+  passed: number;
+  total: number;
 }
 
 /** The correct option(s) for a question, revealed only after an attempt. */
@@ -119,6 +148,10 @@ export interface QuizAttemptReviewQuestion {
   given_text: string;
   correct_answers: QuizAttemptReviewAnswer[];
   correct_text: string | null;
+  /** Source submitted for a code question. */
+  given_code?: string;
+  test_summary?: CodeTestSummary | null;
+  test_results?: CodeTestResult[];
 }
 
 export interface QuizAttemptResult {
@@ -167,7 +200,14 @@ export interface MyAttemptDetail extends QuizAttemptResult {
 }
 
 /** One assignment from any of the student's active classes. */
+export interface AssessmentRef {
+  assessment_id: string;
+  title?: string | null;
+}
+
 export interface MyAssignment {
+  kind?: "quiz" | "assessment";
+  assessment?: AssessmentRef | null;
   id: string;
   title: string;
   description: string | null;
@@ -185,6 +225,125 @@ export interface MyAssignment {
   opens_at: string | null;
   due_at: string | null;
   time_limit_minutes: number | null;
+}
+
+export interface Assessment {
+  assessment_id: string;
+  teacher_id: number;
+  title: string;
+  description?: string | null;
+  status?: string;
+  time_limit_minutes?: number | null;
+  max_attempts?: number;
+  opens_at?: string | null;
+  due_at?: string | null;
+  questions?: AssessmentQuestion[];
+  total_points?: number;
+  questions_count?: number;
+  assignments_count?: number;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+export interface AssessmentQuestion {
+  question_id: string;
+  assessment_id?: string;
+  question_text: string;
+  question_type: string;
+  points?: number;
+  display_order?: number;
+  config?: Record<string, unknown> | CodeConfig | null;
+  correct_text?: string | null;
+  match_mode?: string | null;
+  language?: string;
+  starter_code?: string;
+  tests?: CodeTest[];
+  answers?: Answer[];
+  code_config?: CodeConfig | null;
+}
+
+export interface AssessmentAssignment {
+  id: string;
+  assessment_id: string;
+  class_id: string;
+  student_id?: number | string | null;
+  teacher_id?: number;
+  title: string;
+  description?: string | null;
+  max_attempts?: number;
+  time_limit_minutes?: number | null;
+  opens_at?: string | null;
+  due_at?: string | null;
+  assessment?: AssessmentRef | null;
+  class?: { id: string; name: string } | null;
+  student?: User | null;
+  attempts_count?: number;
+}
+
+export interface AssessmentAttemptSummary {
+  attempt_id: number;
+  assessment_id: string;
+  assessment_title?: string | null;
+  assignment_id?: string | null;
+  assignment_title?: string | null;
+  attempt_number: number;
+  score: number;
+  teacher_score?: number | null;
+  final_score: number;
+  total: number;
+  percentage: number;
+  teacher_feedback?: string | null;
+  graded_at?: string | null;
+  completed_at?: string | null;
+}
+
+export interface AssessmentReviewQuestion {
+  question_id: string;
+  question_text: string;
+  question_type: string;
+  points: number;
+  earned?: number;
+  is_correct?: boolean | null;
+  given_answer_ids?: string[];
+  given_text?: string;
+  given_code?: string;
+  correct_answers?: string[];
+  correct_text?: string | null;
+  test_summary?: CodeTestSummary | null;
+  test_results?: CodeTestResult[];
+}
+
+export interface AssessmentAttemptResult {
+  attempt: AssessmentAttemptSummary;
+  questions: AssessmentReviewQuestion[];
+}
+
+export interface AssessmentAttemptStart {
+  started_at: string;
+  server_now?: string;
+  deadline_at: string | null;
+  time_limit_seconds: number | null;
+  attempt_token: string | null;
+}
+
+export interface AssessmentResultRow {
+  student: User | null;
+  attempts_count: number;
+  best_score: number;
+  best_total: number;
+  best_percentage: number;
+  attempts: Array<{
+    id: number;
+    attempt_number: number;
+    score: number;
+    teacher_score: number | null;
+    final_score: number;
+    total: number;
+    percentage: number;
+    teacher_feedback?: string | null;
+    graded_at?: string | null;
+    completed_at?: string | null;
+  }>;
 }
 
 export interface Party {
