@@ -106,9 +106,14 @@ export function AppLayout() {
             )}
 
             {(user?.role?.title === "student" || user?.role?.title === "individual") && (
-              <NavLink to="/my-results" className={navLinkClass}>
-                My results
-              </NavLink>
+              <>
+                <NavLink to="/my-assessments" className={navLinkClass}>
+                  My assessments
+                </NavLink>
+                <NavLink to="/my-results" className={navLinkClass}>
+                  My results
+                </NavLink>
+              </>
             )}
 
             {(user?.role?.title === "teacher" || user?.role?.title === "admin") && (
