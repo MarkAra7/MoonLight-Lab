@@ -20,10 +20,56 @@ class AssessmentAttemptController extends Controller
     {
     }
 
+    /** Questions for a student. Correct answers and hidden tests never leave the server. */
+    public function questions(Request $request, Assessment $assessment)
+    {
+        $assignment = $this->resolveAssignment($request, $assessment);
+
+        if (! $assignment) {
+            $assignment = $this->assignedToStudent($request, $assessment);
+        }
+
+        if (! $assignment) {
+            abort(403, 'This assessment was not assigned to you.');
+        }
+
+        if (! $assignment->isOpen()) {
+            return response()->json(['message' => 'This assessment is closed.'], 422);
+        }
+
+        return response()->json(
+            $assessment->questions()->with('answers')->orderBy('display_order')->get()
+                ->map(fn (AssessmentQuestion $question) => [
+                    'question_id' => $question->question_id,
+                    'question_text' => $question->question_text,
+                    'question_type' => $question->question_type,
+                    'points' => (int) $question->points,
+                    'display_order' => (int) $question->display_order,
+                    'answers' => $question->answers->map(fn ($answer) => [
+                        'answer_id' => $answer->answer_id,
+                        'answer_text' => $answer->answer_text,
+                    ])->values()->all(),
+                    'code_config' => $question->question_type === 'code' ? [
+                        'language' => $question->language,
+                        'starter_code' => $question->starter_code,
+                        'tests' => collect($question->tests)
+                            ->reject(fn ($test) => (bool) ($test['hidden'] ?? false))
+                            ->map(fn ($test) => [
+                                'input' => (string) ($test['input'] ?? ''),
+                                'expected_output' => (string) ($test['expected_output'] ?? ''),
+                            ])
+                            ->values()
+                            ->all(),
+                    ] : null,
+                ])->values()->all()
+        );
+    }
+
     /** @return array{started_at:string,deadline_at:?string,time_limit_seconds:?int,attempt_token:?string} */
     public function start(Request $request, Assessment $assessment)
     {
-        $assignment = $this->resolveAssignment($request, $assessment);
+        $assignment = $this->resolveAssignment($request, $assessment)
+            ?? $this->assignedToStudent($request, $assessment);
         $studentId = $request->user()->id;
 
         if ($assignment && ! $assignment->isForStudent($studentId)) {
@@ -68,7 +114,8 @@ class AssessmentAttemptController extends Controller
             'answers.*.code' => ['nullable', 'string', 'max:10000'],
         ]);
 
-        $assignment = $this->resolveAssignment($request, $assessment, $data['assignment_id'] ?? null);
+        $assignment = $this->resolveAssignment($request, $assessment, $data['assignment_id'] ?? null)
+            ?? $this->assignedToStudent($request, $assessment);
         $studentId = $request->user()->id;
 
         if ($assignment && ! $assignment->isForStudent($studentId)) {
@@ -232,6 +279,20 @@ class AssessmentAttemptController extends Controller
         if ($attempt->student_id !== $request->user()->id) abort(403);
 
         return response()->json($this->attemptPayload($attempt, true));
+    }
+
+    private function assignedToStudent(Request $request, Assessment $assessment): ?AssessmentAssignment
+    {
+        $studentId = $request->user()->id;
+
+        return AssessmentAssignment::where('assessment_id', $assessment->assessment_id)
+            ->whereHas('class.students', fn ($query) => $query
+                ->where('student_id', $studentId)
+                ->where('status', 'active'))
+            ->where(fn ($query) => $query
+                ->whereNull('student_id')
+                ->orWhere('student_id', $studentId))
+            ->first();
     }
 
     private function resolveAssignment(Request $request, Assessment $assessment, ?string $assignmentId = null): ?AssessmentAssignment

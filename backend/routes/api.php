@@ -95,6 +95,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/my-attempts/{attempt}', [QuizAttemptController::class, 'attempt']);
         Route::get('/my-assessment-attempts', [AssessmentAttemptController::class, 'myAttempts']);
         Route::get('/my-assessment-attempts/{attempt}', [AssessmentAttemptController::class, 'attempt']);
+        Route::get('/assessments/{assessment}/questions', [AssessmentAttemptController::class, 'questions']);
         Route::post('/assessments/{assessment}/attempts/start', [AssessmentAttemptController::class, 'start']);
         Route::post('/assessments/{assessment}/attempts', [AssessmentAttemptController::class, 'grade']);
         Route::post('/quiz-attempts', [QuizAttemptController::class, 'store']);
