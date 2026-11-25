@@ -37,7 +37,9 @@ export function TeacherAssessmentsPage() {
 
   useEffect(() => {
     if (authLoading || !user) return;
-    void load();
+    void (async () => {
+      await load();
+    })();
   }, [authLoading, user, load]);
 
   const remove = async (assessment: Assessment) => {

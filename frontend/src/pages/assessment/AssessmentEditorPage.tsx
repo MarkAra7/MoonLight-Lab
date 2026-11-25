@@ -110,7 +110,9 @@ export function AssessmentEditorPage() {
 
   useEffect(() => {
     if (authLoading || !user) return;
-    void load();
+    void (async () => {
+      await load();
+    })();
   }, [authLoading, user, load]);
 
   const updateQuestion = (key: string, next: QuestionDraft) => {

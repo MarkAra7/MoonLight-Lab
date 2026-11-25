@@ -40,7 +40,9 @@ export function AssessmentResultsPage() {
 
   useEffect(() => {
     if (authLoading || !user) return;
-    void load();
+    void (async () => {
+      await load();
+    })();
   }, [authLoading, user, load]);
 
   const download = async () => {

@@ -57,7 +57,9 @@ export function AssessmentAttemptGradingPage() {
 
   useEffect(() => {
     if (authLoading || !user) return;
-    void load();
+    void (async () => {
+      await load();
+    })();
   }, [authLoading, user, load]);
 
   const save = async (event: FormEvent<HTMLFormElement>) => {

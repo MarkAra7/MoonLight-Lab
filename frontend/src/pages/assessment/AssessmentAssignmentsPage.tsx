@@ -95,14 +95,13 @@ export function AssessmentAssignmentsPage() {
 
   useEffect(() => {
     if (authLoading || !user) return;
-    void load();
+    void (async () => {
+      await load();
+    })();
   }, [authLoading, user, load]);
 
   useEffect(() => {
-    if (!form.class_id) {
-      setStudents([]);
-      return;
-    }
+    if (!form.class_id) return;
 
     let active = true;
     classApi
@@ -294,6 +293,7 @@ export function AssessmentAssignmentsPage() {
                 disabled={saving || Boolean(editingId)}
                 onChange={(event) => {
                   setForm((prev) => ({ ...prev, class_id: event.target.value, student_id: "" }));
+                  setStudents([]);
                 }}
                 className={inputClasses}
               >

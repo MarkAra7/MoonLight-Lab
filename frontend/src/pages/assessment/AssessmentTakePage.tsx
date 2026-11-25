@@ -29,7 +29,7 @@ export function AssessmentTakePage() {
   const [answers, setAnswers] = useState<Record<string, TakeAnswer>>({});
   const [start, setStart] = useState<AssessmentAttemptStart | null>(null);
   const [serverOffset, setServerOffset] = useState(0);
-  const [tick, setTick] = useState(0);
+  const [nowMs, setNowMs] = useState(0);
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -58,12 +58,14 @@ export function AssessmentTakePage() {
 
   useEffect(() => {
     if (authLoading || !user) return;
-    void load();
+    void (async () => {
+      await load();
+    })();
   }, [authLoading, user, load]);
 
   useEffect(() => {
     if (!start?.deadline_at) return;
-    const timer = window.setInterval(() => setTick((value) => value + 1), 1000);
+    const timer = window.setInterval(() => setNowMs(Date.now()), 1000);
     return () => window.clearInterval(timer);
   }, [start?.deadline_at]);
 
@@ -71,10 +73,9 @@ export function AssessmentTakePage() {
     if (!start?.deadline_at) return null;
     return Math.max(
       0,
-      Math.ceil((Date.parse(start.deadline_at) - (Date.now() + serverOffset)) / 1000),
+      Math.ceil((Date.parse(start.deadline_at) - (nowMs + serverOffset)) / 1000),
     );
-    // `tick` refreshes the countdown once a second.
-  }, [start, serverOffset, tick]);
+  }, [start, serverOffset, nowMs]);
 
   const begin = async () => {
     if (!assessmentId || starting) return;
@@ -85,7 +86,7 @@ export function AssessmentTakePage() {
       const { data } = await assessmentApi.startAttempt(assessmentId, assignmentId);
       setStart(data);
       setServerOffset(data.server_now ? Date.parse(data.server_now) - Date.now() : 0);
-      setTick(0);
+      setNowMs(Date.now());
 
       const initial: Record<string, TakeAnswer> = {};
       questions.forEach((question) => {
@@ -166,9 +167,10 @@ export function AssessmentTakePage() {
   );
 
   useEffect(() => {
-    if (start && remainingSeconds === 0 && !submitting) {
-      void submit(true);
-    }
+    if (!start || remainingSeconds !== 0 || submitting) return;
+    void (async () => {
+      await submit(true);
+    })();
   }, [remainingSeconds, start, submit, submitting]);
 
   if (authLoading) return <SpinnerBlock />;

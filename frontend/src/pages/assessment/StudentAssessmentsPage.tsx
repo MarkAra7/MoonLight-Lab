@@ -35,7 +35,9 @@ export function StudentAssessmentsPage() {
 
   useEffect(() => {
     if (authLoading || !user) return;
-    void load();
+    void (async () => {
+      await load();
+    })();
   }, [authLoading, user, load]);
 
   if (authLoading) return <SpinnerBlock />;
